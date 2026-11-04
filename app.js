@@ -5,11 +5,9 @@
 import { db } from "./auth.js";
 import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const TARGET_ANNUALE = 1000000; // 1M PHP
+let TARGET_ANNUALE = 1000000; 
 
-// Listino ufficiale basato sul PDF del 14 Settembre 2026
 const catalogoIniziale = [
-    // CARDIOVASCULAR PRODUCTS
     { id: "amlix-5", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX 5mg*", descrizione: "Amlodipine Besilate 5mg Tablet", pack: "100's", prezzo: 825.00, maxDeal: "-", arp: "825.00" },
     { id: "amlix-10", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX 10mg*", descrizione: "Amlodipine Besilate 10mg Tablet", pack: "100's", prezzo: 1120.00, maxDeal: "-", arp: "1,120.00" },
     { id: "hextan", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN", descrizione: "Losartan Potassium 50mg Film-Coated Tablet", pack: "100's", prezzo: 1454.00, maxDeal: "-", arp: "1,454.00" },
@@ -22,8 +20,6 @@ const catalogoIniziale = [
     { id: "stravas", categoria: "CARDIOVASCULAR PRODUCTS", nome: "STRAVAS", descrizione: "Rosuvastatin Calcium 10mg Film-Coated Tablet", pack: "30's", prezzo: 863.00, maxDeal: "5+5/10+15", arp: "863.00" },
     { id: "finora", categoria: "CARDIOVASCULAR PRODUCTS", nome: "FINORA", descrizione: "Fenofibrate 200mg Capsule", pack: "100's", prezzo: 2800.00, maxDeal: "5+5/10+15/15+25", arp: "3,136.00" },
     { id: "amtaz", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMTAZ", descrizione: "Trimetazidine HCI 35mg Modified-Release Tablet", pack: "30's", prezzo: 587.00, maxDeal: "-", arp: "657.44" },
-
-    // ANTIBACTERIAL PRODUCTS
     { id: "ciflomed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "CIFLOMED", descrizione: "Ciprofloxacin 500mg Film-Coated Tablet", pack: "100's", prezzo: 3300.00, maxDeal: "5+5/10+20", arp: "3,696.00" },
     { id: "dalamed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "DALAMED", descrizione: "Clindamycin 300mg Capsule", pack: "100's", prezzo: 5440.00, maxDeal: "8+1", arp: "6,092.80" },
     { id: "klarimed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "KLARIMED", descrizione: "Clarithromycin 500mg Film-Coated Tablet", pack: "30's", prezzo: 1668.00, maxDeal: "5+5/10+15", arp: "1,868.16" },
@@ -36,52 +32,26 @@ const catalogoIniziale = [
     { id: "rozenta-tab", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA Tab", descrizione: "Azithromycin 500mg Film-coated Tablet", pack: "30's", prezzo: 2640.00, maxDeal: "-", arp: "2,956.80" },
     { id: "amrid", categoria: "ANTIBACTERIAL PRODUCTS", nome: "AMRID", descrizione: "Metronidazole 500mg Tablet", pack: "100's", prezzo: 1150.00, maxDeal: "8+1", arp: "1,288.00" },
     { id: "procin", categoria: "ANTIBACTERIAL PRODUCTS", nome: "PROCIN", descrizione: "Mupirocin 20mg/g (2% w/w) Ointment, 5G/tube", pack: "1's", prezzo: 173.00, maxDeal: "-", arp: "193.76" },
-
-    // TOPICAL CORTICOSTEROIDS
     { id: "solbina", categoria: "TOPICAL CORTICOSTEROIDS", nome: "SOLBINA", descrizione: "Clobetasol propionate 500 mcg/g (0.05% w/w) Topical Cream, 10G/tube", pack: "1's", prezzo: 345.00, maxDeal: "8+1", arp: "386.40" },
-
-    // METABOLIC PRODUCT
     { id: "glimep", categoria: "METABOLIC PRODUCT", nome: "GLIMEP", descrizione: "Glimepiride 2mg Tablet", pack: "100's", prezzo: 1127.00, maxDeal: "8+1", arp: "1,127.00" },
-
-    // PROTON PUMP INHIBITORS
     { id: "sazol", categoria: "PROTON PUMP INHIBITORS", nome: "SAZOL", descrizione: "Esomeprazole 40mg Delayed Release Tablet", pack: "30's", prezzo: 1800.00, maxDeal: "-", arp: "2,016.00" },
     { id: "nexopraz-40", categoria: "PROTON PUMP INHIBITORS", nome: "NEXOPRAZ 40", descrizione: "Esomeprazole 40mg Enteric Coated Tablet", pack: "100's", prezzo: 6050.00, maxDeal: "8+1", arp: "6,776.00" },
     { id: "trumeprazole", categoria: "PROTON PUMP INHIBITORS", nome: "TRUMEPRAZOLE", descrizione: "Omeprazole 20mg Delayed Release Capsule", pack: "100's", prezzo: 3630.00, maxDeal: "-", arp: "4,065.60" },
-
-    // ANTI-HISTAMINE
     { id: "levorin", categoria: "ANTI-HISTAMINE", nome: "LEVORIN", descrizione: "Levocetirizine Dihydrochloride 5mg FCT", pack: "30's", prezzo: 1100.00, maxDeal: "8+1", arp: "1,232.00" },
     { id: "sinuzerc", categoria: "ANTI-HISTAMINE", nome: "SINUZERC", descrizione: "Loratadine 10mg Tablet", pack: "100's", prezzo: 1500.00, maxDeal: "-", arp: "1,680.00" },
     { id: "xytozen", categoria: "ANTI-HISTAMINE", nome: "XYTOZEN", descrizione: "Montelukast 10mg + Levocetirizine Hydrochloride 5mg Film-coated Tablet", pack: "30's", prezzo: 1035.00, maxDeal: "-", arp: "1,159.20" },
-
-    // ANTI-VERTIGO
     { id: "verahit", categoria: "ANTI-VERTIGO", nome: "VERAHIT", descrizione: "Betahistine Hydrochloride 16mg tablet", pack: "100's", prezzo: 2300.00, maxDeal: "8+1", arp: "2,576.00" },
-
-    // LEUKOTRIENE RECEPTOR ANTAGONIST
     { id: "monlastik", categoria: "LEUKOTRIENE RECEPTOR ANTAGONIST", nome: "MONLASTIK", descrizione: "Montelukast 10mg Film-coated Tablet", pack: "100's", prezzo: 3300.00, maxDeal: "8+1", arp: "3,696.00" },
-
-    // ANALGESIC
     { id: "trucox", categoria: "ANALGESIC", nome: "TRUCOX", descrizione: "Celecoxib 200mg Capsule", pack: "30's", prezzo: 1012.00, maxDeal: "-", arp: "1,133.44" },
     { id: "memaray", categoria: "ANALGESIC", nome: "MEMARAY", descrizione: "Mefenamic Acid 500mg Capsule", pack: "100's", prezzo: 1265.00, maxDeal: "8+1", arp: "1,416.80" },
     { id: "lotram-plus", categoria: "ANALGESIC", nome: "LOTRAM PLUS", descrizione: "Tramadol 37.5mg + Paracetamol 325 mg FCT", pack: "100's", prezzo: 3000.00, maxDeal: "8+1", arp: "3,360.00" },
     { id: "lotram", categoria: "ANALGESIC", nome: "LOTRAM", descrizione: "Tramadol Hydrochloride 50mg FCT", pack: "100's", prezzo: 1150.00, maxDeal: "8+1", arp: "1,288.00" },
-
-    // CHOLELITHOLYTIC & HEPATIC PROTECTOR
     { id: "colimax", categoria: "CHOLELITHOLYTIC & HEPATIC PROTECTOR", nome: "COLIMAX", descrizione: "Ursodeoxycholic Acid 300mg FCT", pack: "100's", prezzo: 4500.00, maxDeal: "8+1", arp: "5,040.00" },
-
-    // ANTI-GOUT
     { id: "acugout", categoria: "ANTI-GOUT", nome: "ACUGOUT", descrizione: "Colchicine 500mcg Tablet", pack: "100's", prezzo: 518.00, maxDeal: "-", arp: "580.16" },
     { id: "xozid", categoria: "ANTI-GOUT", nome: "XOZID", descrizione: "Febuxostat 40mg FCT", pack: "30's", prezzo: 794.00, maxDeal: "8+1", arp: "889.28" },
-
-    // ANTI-EPILEPTIC / DIABETIC NEUROPATHY
     { id: "convuliz", categoria: "ANTI-EPILEPTIC / DIABETIC NEUROPATHY", nome: "CONVULIZ", descrizione: "Pregabalin 75mg Capsule", pack: "28's", prezzo: 1030.00, maxDeal: "8+1", arp: "1,030.40" },
-
-    // ANTI-ANEMIA PRESCRIPTION DRUG
     { id: "folmaterna", categoria: "ANTI-ANEMIA PRESCRIPTION DRUG", nome: "FOLMATERNA", descrizione: "Folic Acid 5mg Capsule", pack: "100's", prezzo: 920.00, maxDeal: "8+1", arp: "1,030.40" },
-
-    // ALPHA-1 ADRENORECEPTOR ANTAGONIST
     { id: "prostulax", categoria: "ALPHA-1 ADRENORECEPTOR ANTAGONIST", nome: "PROSTULAX", descrizione: "Tamsulosin Hydrochloride 400mcg Prolonged Release Tablet", pack: "30's", prezzo: 1380.00, maxDeal: "8+1", arp: "1,545.60" },
-
-    // NUTRITIONALS
     { id: "iromax-plus", categoria: "NUTRITIONALS", nome: "IROMAX PLUS", descrizione: "Ferrous Ascorbate, L-Methyl Folate, Vitamins & Minerals FCT", pack: "30's", prezzo: 600.00, maxDeal: "-", arp: "672.00" },
     { id: "gutzorb", categoria: "NUTRITIONALS", nome: "GUTZORB", descrizione: "Probiotics + Gastric Enzymes Capsule", pack: "100's", prezzo: 4500.00, maxDeal: "-", arp: "5,040.00" },
     { id: "livoplex", categoria: "NUTRITIONALS", nome: "LIVOPLEX", descrizione: "Silymarin 150mg + Vit B1, B6, B12 Capsule", pack: "30's", prezzo: 518.00, maxDeal: "10+1", arp: "580.16" },
@@ -99,22 +69,71 @@ const catalogoIniziale = [
 
 let catalogData = [];
 
-// Inizializzazione applicazione
 document.addEventListener("DOMContentLoaded", async () => {
     const dataOggi = new Date().toISOString().split('T')[0];
     const inputData = document.getElementById('ordineData');
     if (inputData) inputData.value = dataOggi;
 
+    await caricaTargetDalBackend();
     await caricaCatalogoDaFirestore();
     caricaOrdiniSalvati();
+    setupStickyWidgetObserver();
 });
 
-// Sincronizzazione Catalogo con Firestore
+async function caricaTargetDalBackend() {
+    try {
+        const docRef = doc(db, "configurazioni", "impostazioni_globali");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists() && docSnap.data().targetAnnuale) {
+            TARGET_ANNUALE = Number(docSnap.data().targetAnnuale);
+        } else {
+            await setDoc(docRef, { targetAnnuale: 1000000 }, { merge: true });
+            TARGET_ANNUALE = 1000000;
+        }
+
+        const inputTarget = document.getElementById('inputTargetAnnuale');
+        if (inputTarget) inputTarget.value = TARGET_ANNUALE;
+
+    } catch (error) {
+        console.error("Errore caricamento target dal backend, uso default:", error);
+    }
+}
+
+window.aggiornaTargetAnnuale = async function(valore) {
+    const nuovoTarget = parseFloat(valore);
+    if (!isNaN(nuovoTarget) && nuovoTarget > 0) {
+        TARGET_ANNUALE = nuovoTarget;
+        try {
+            await setDoc(doc(db, "configurazioni", "impostazioni_globali"), {
+                targetAnnuale: TARGET_ANNUALE
+            }, { merge: true });
+            ricalcolaTotale();
+        } catch (error) {
+            console.error("Errore salvataggio target su cloud:", error);
+        }
+    } else {
+        const inputTarget = document.getElementById('inputTargetAnnuale');
+        if (inputTarget) inputTarget.value = TARGET_ANNUALE;
+    }
+};
+
+window.cambiaTargetStep = function(delta) {
+    const inputEl = document.getElementById('inputTargetAnnuale');
+    if (!inputEl) return;
+
+    let valoreAttuale = parseFloat(inputEl.value) || TARGET_ANNUALE;
+    let nuovoValore = valoreAttuale + delta;
+    if (nuovoValore < 0) nuovoValore = 0;
+
+    inputEl.value = nuovoValore;
+    window.aggiornaTargetAnnuale(nuovoValore);
+};
+
 async function caricaCatalogoDaFirestore() {
     try {
         const querySnapshot = await getDocs(collection(db, "catalogo"));
         if (querySnapshot.empty) {
-            console.log("Inizializzazione database con il catalogo ufficiale...");
             for (const item of catalogoIniziale) {
                 await setDoc(doc(db, "catalogo", item.id), item);
             }
@@ -128,14 +147,13 @@ async function caricaCatalogoDaFirestore() {
         renderizzaCatalogo();
         ricalcolaTotale();
     } catch (error) {
-        console.error("Errore caricamento catalogo da Firestore, uso catalogo locale:", error);
+        console.error("Errore caricamento catalogo da Firestore:", error);
         catalogData = [...catalogoIniziale];
         renderizzaCatalogo();
         ricalcolaTotale();
     }
 }
 
-// Renderizzazione Catalogo con pulsanti - e +
 window.renderizzaCatalogo = function() {
     const container = document.getElementById('categorieContainer');
     if (!container) return;
@@ -227,7 +245,6 @@ window.espandiTutto = function(apri) {
     icons.forEach(i => i.textContent = apri ? '▼' : '▶');
 }
 
-// Funzione richiamata dai pulsanti - e +
 window.cambiaQuantita = function(id, delta) {
     const inputEl = document.getElementById(`qty_${id}`);
     if (!inputEl) return;
@@ -240,7 +257,6 @@ window.cambiaQuantita = function(id, delta) {
     impostaQuantitaProdotto(id, nuovoValore);
 }
 
-// Funzione richiamata se l'utente digita direttamente nel campo numerico
 window.aggiornaQuantitaDaInput = function(id, valore) {
     let nuovoValore = parseInt(valore) || 0;
     if (nuovoValore < 0) nuovoValore = 0;
@@ -288,18 +304,89 @@ function ricalcolaTotale() {
     const countSelezionati = document.getElementById('countSelezionati');
     const quickPreview = document.getElementById('quickSelectedPreview');
 
+    const stickyTotale = document.getElementById('stickyTotale');
+    const stickyResiduo = document.getElementById('stickyResiduo');
+    const stickyProgressBar = document.getElementById('stickyProgressBar');
+    const stickyPercentBadge = document.getElementById('stickyPercentBadge');
+
     if (labelTotale) labelTotale.textContent = `₱${totale.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-    
-    const residuo = Math.max(0, TARGET_ANNUALE - totale);
-    if (labelResiduo) labelResiduo.textContent = `₱${residuo.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    if (stickyTotale) stickyTotale.textContent = `₱${totale.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 
-    const percentuale = Math.min(100, (totale / TARGET_ANNUALE) * 100);
-    if (labelPercentuale) labelPercentuale.textContent = `${percentuale.toFixed(1)}% of target used`;
-    if (progressBar) progressBar.style.width = `${percentuale}%`;
-    if (countSelezionati) countSelezionati.textContent = countItems;
+    const eccedenza = totale - TARGET_ANNUALE;
+    const isOverTarget = eccedenza > 0;
+    const percentuale = (totale / TARGET_ANNUALE) * 100;
 
+    if (isOverTarget) {
+        const overText = `Over by ₱${eccedenza.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        
+        if (labelResiduo) labelResiduo.innerHTML = `<span class="text-rose-600 font-bold">${overText}</span>`;
+        if (stickyResiduo) stickyResiduo.innerHTML = `<span class="text-rose-600 font-bold">${overText}</span>`;
+
+        if (labelPercentuale) {
+            labelPercentuale.innerHTML = `<span class="text-rose-600 font-bold">${percentuale.toFixed(1)}% of target used (EXCEEDED)</span>`;
+        }
+
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            progressBar.className = 'bg-rose-500 h-3 w-0 transition-all duration-300';
+        }
+        if (stickyProgressBar) {
+            stickyProgressBar.style.width = '100%';
+            stickyProgressBar.className = 'bg-rose-500 h-2 w-0 transition-all duration-300';
+        }
+
+        if (stickyPercentBadge) {
+            stickyPercentBadge.textContent = `${percentuale.toFixed(1)}% (OVER)`;
+            stickyPercentBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700';
+        }
+
+    } else {
+        const residuo = TARGET_ANNUALE - totale;
+        const residuoText = `₱${residuo.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        
+        if (labelResiduo) labelResiduo.textContent = residuoText;
+        if (stickyResiduo) stickyResiduo.textContent = residuoText;
+
+        if (labelPercentuale) labelPercentuale.textContent = `${percentuale.toFixed(1)}% of target used`;
+
+        const progressPercent = Math.min(100, percentuale);
+        if (progressBar) {
+            progressBar.style.width = `${progressPercent}%`;
+            progressBar.className = 'bg-slate-900 h-3 w-0 transition-all duration-300';
+        }
+        if (stickyProgressBar) {
+            stickyProgressBar.style.width = `${progressPercent}%`;
+            stickyProgressBar.className = 'bg-slate-900 h-2 w-0 transition-all duration-300';
+        }
+
+        if (stickyPercentBadge) {
+            stickyPercentBadge.textContent = `${percentuale.toFixed(1)}%`;
+            stickyPercentBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700';
+        }
+    }
+
+    if (countSelezionati) countSelezionati.textContent = `${countItems} items`;
     if (quickPreview) {
         quickPreview.innerHTML = previewHtml || '<p class="text-slate-400 italic">No products selected yet.</p>';
+    }
+}
+
+function setupStickyWidgetObserver() {
+    const mainBanner = document.getElementById('targetBannerContainer');
+    const stickyWidget = document.getElementById('stickyTargetWidget');
+
+    if (mainBanner && stickyWidget) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) {
+                    stickyWidget.classList.remove('hidden');
+                } else {
+                    stickyWidget.classList.add('hidden');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        observer.observe(mainBanner);
     }
 }
 
@@ -309,13 +396,6 @@ window.azzeraQuantita = function() {
     ricalcolaTotale();
 }
 
-window.resettaTutto = function() {
-    if (confirm("Vuoi ripristinare le quantità e ricaricare il catalogo standard?")) {
-        window.azzeraQuantita();
-    }
-}
-
-// Gestione Modale Nuovo Prodotto
 window.apriModalNuovoProdotto = function() {
     document.getElementById('modalProdotto').classList.remove('hidden');
 }
@@ -347,11 +427,9 @@ window.salvaNuovoProdotto = async function() {
         document.getElementById('nuovoPrezzo').value = '';
     } catch (error) {
         console.error("Errore salvataggio nuovo prodotto su Firestore:", error);
-        alert("Errore durante il salvataggio.");
     }
 }
 
-// Salvataggio ordine e storico su Firestore
 window.salvaOrdineCorrente = async function() {
     const cliente = document.getElementById('clienteNome').value.trim();
     if (!cliente) {
@@ -382,11 +460,9 @@ window.salvaOrdineCorrente = async function() {
         caricaOrdiniSalvati();
     } catch (error) {
         console.error("Errore salvataggio ordine:", error);
-        alert("Errore nel salvataggio dell'ordine.");
     }
 }
 
-// Recupero e rendering degli ordini salvati dal backend (Firestore)
 async function caricaOrdiniSalvati() {
     const listaContainer = document.getElementById('listaOrdiniSalvati');
     if (!listaContainer) return;
@@ -401,7 +477,6 @@ async function caricaOrdiniSalvati() {
         let html = '';
         querySnapshot.forEach((docSnap) => {
             const o = docSnap.data();
-
             html += `
                 <div onclick="caricaOrdineDalBackend('${docSnap.id}')" class="bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl p-2.5 flex justify-between items-center text-xs cursor-pointer transition-colors group">
                     <div>
@@ -418,29 +493,22 @@ async function caricaOrdiniSalvati() {
     }
 }
 
-// Funzione per scaricare e aprire l'ordine direttamente dal backend (Firestore) al click
 window.caricaOrdineDalBackend = async function(idOrdine) {
     try {
         const docRef = doc(db, "ordini", idOrdine);
         const docSnap = await getDoc(docRef);
 
-        if (!docSnap.exists()) {
-            alert("Ordine non trovato nel database.");
-            return;
-        }
+        if (!docSnap.exists()) return;
 
         const ordine = docSnap.data();
 
-        // 1. Compila i campi del form con i dati salvati nel backend
         if (document.getElementById('clienteNome')) document.getElementById('clienteNome').value = ordine.cliente || '';
         if (document.getElementById('ordineNote')) document.getElementById('ordineNote').value = ordine.note || '';
         if (document.getElementById('ordineNoteExtra')) document.getElementById('ordineNoteExtra').value = ordine.noteExtra || '';
         if (document.getElementById('ordineData')) document.getElementById('ordineData').value = ordine.data || '';
 
-        // 2. Azzera tutte le quantità correnti nel catalogo
         catalogData.forEach(p => p.quantita = 0);
 
-        // 3. Ripristina le quantità salvate nell'ordine del backend
         if (ordine.prodotti && Array.isArray(ordine.prodotti)) {
             ordine.prodotti.forEach(itemProd => {
                 const prodTrovato = catalogData.find(p => p.id === itemProd.id || p.nome === itemProd.nome);
@@ -450,14 +518,12 @@ window.caricaOrdineDalBackend = async function(idOrdine) {
             });
         }
 
-        // 4. Aggiorna l'interfaccia a schermo
         renderizzaCatalogo();
         ricalcolaTotale();
         window.espandiTutto(true);
 
     } catch (error) {
-        console.error("Errore durante il caricamento dell'ordine dal backend:", error);
-        alert("Impossibile caricare l'ordine dal database.");
+        console.error("Errore durante il caricamento dell'ordine:", error);
     }
 }
 
@@ -472,14 +538,9 @@ window.eliminaOrdine = async function(id) {
     }
 }
 
-// Esportazione PDF Ufficiale con Layout Tabellare Professionale (AutoTable)
 window.esportaPDF = function() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4'
-    });
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
     const cliente = document.getElementById('clienteNome').value.trim() || 'N/A';
     const note = document.getElementById('ordineNote').value.trim() || 'N/A';
@@ -492,25 +553,20 @@ window.esportaPDF = function() {
         return;
     }
 
-    // --- HEADER DOCUMENTO ---
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.setTextColor(15, 23, 42); // slate-900
+    doc.setTextColor(15, 23, 42);
     doc.text("TRUMED ORDER MANAGEMENT", 14, 20);
 
     doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(71, 85, 105); // slate-600
+    doc.setTextColor(71, 85, 105);
     doc.text("OFFICIAL PURCHASE ORDER", 14, 26);
 
-    // Linea divisoria
-    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(0.5);
     doc.line(14, 30, 196, 30);
 
-    // --- DETTAGLI ORDINE / CLIENTE ---
     doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
     doc.setTextColor(51, 65, 85);
     doc.text("Client / Doctor / Clinic:", 14, 37);
     doc.text("References / Notes:", 14, 43);
@@ -522,7 +578,6 @@ window.esportaPDF = function() {
     doc.text(note, 55, 43);
     doc.text(dataOrdine, 55, 49);
 
-    // --- TABELLA PRODOTTI ---
     const tableBody = prodottiSelezionati.map(p => [
         p.nome,
         p.descrizione,
@@ -540,18 +595,8 @@ window.esportaPDF = function() {
         body: tableBody,
         margin: { left: 14, right: 14 },
         theme: 'striped',
-        headStyles: {
-            fillColor: [15, 23, 42],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            fontSize: 9,
-            halign: 'left'
-        },
-        bodyStyles: {
-            fontSize: 8,
-            textColor: [51, 65, 85],
-            font: 'helvetica'
-        },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 8, textColor: [51, 65, 85], font: 'helvetica' },
         columnStyles: {
             0: { fontStyle: 'bold', cellWidth: 35 },
             1: { cellWidth: 'auto' },
@@ -564,13 +609,9 @@ window.esportaPDF = function() {
             { content: 'TOTAL AMOUNT (Net VAT):', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9 } },
             { content: `PHP ${totaleComplessivo.toLocaleString('en-US', {minimumFractionDigits: 2})}`, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9, textColor: [15, 23, 42] } }
         ]],
-        footStyles: {
-            fillColor: [241, 245, 249],
-            textColor: [15, 23, 42]
-        }
+        footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42] }
     });
 
-    // --- NOTE SPECIALI ---
     if (noteExtra !== 'N/A' && noteExtra.trim() !== '') {
         const finalY = doc.lastAutoTable.finalY + 10;
         if (finalY < 270) {
