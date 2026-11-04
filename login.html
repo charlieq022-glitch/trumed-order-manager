@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Trumed Order Management</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white border border-slate-100 shadow-xl rounded-2xl p-6 sm:p-8">
+        <!-- Titolo -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Trumed Platform</h1>
+            <p class="text-xs text-slate-400 mt-1">Accedi all'area riservata ordini</p>
+        </div>
+
+        <!-- Box Notifiche -->
+        <div id="authAlert" class="hidden mb-4 p-3 text-xs rounded-xl border"></div>
+
+        <!-- Form Accesso -->
+        <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Email</label>
+                <input type="email" id="authEmail" required placeholder="collega@trumed.com" class="w-full border border-slate-200 bg-slate-50/50 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-slate-500 focus:bg-white transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
+                <input type="password" id="authPassword" required placeholder="••••••••" class="w-full border border-slate-200 bg-slate-50/50 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-slate-500 focus:bg-white transition-all">
+            </div>
+
+            <!-- Pulsante Submit -->
+            <button type="submit" id="btnSubmit" class="w-full bg-gradient-to-b from-slate-600 via-slate-700 to-slate-800 hover:from-slate-700 hover:to-slate-900 text-white font-medium text-xs py-3 rounded-xl border border-slate-500/50 shadow-xs transition-all duration-200">
+                Accedi
+            </button>
+        </form>
+
+        <!-- Toggle Login / Registrazione -->
+        <div class="mt-6 text-center text-xs text-slate-500">
+            <span id="toggleText">Non hai un account?</span> 
+            <button onclick="toggleAuthMode()" id="btnToggle" class="font-semibold text-slate-800 hover:underline">Registrati</button>
+        </div>
+    </div>
+
+    <!-- Script di gestione autenticazione -->
+    <script type="module" src="login.js"></script>
+</body>
+</html>

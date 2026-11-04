@@ -1,0 +1,591 @@
+// ==========================================
+// TRUMED ORDER MANAGEMENT - APP.JS
+// ==========================================
+
+import { db } from "./auth.js";
+import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const TARGET_ANNUALE = 1000000; // 1M PHP
+
+// Listino ufficiale basato sul PDF del 14 Settembre 2026
+const catalogoIniziale = [
+    // CARDIOVASCULAR PRODUCTS
+    { id: "amlix-5", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX 5mg*", descrizione: "Amlodipine Besilate 5mg Tablet", pack: "100's", prezzo: 825.00, maxDeal: "-", arp: "825.00" },
+    { id: "amlix-10", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX 10mg*", descrizione: "Amlodipine Besilate 10mg Tablet", pack: "100's", prezzo: 1120.00, maxDeal: "-", arp: "1,120.00" },
+    { id: "hextan", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN", descrizione: "Losartan Potassium 50mg Film-Coated Tablet", pack: "100's", prezzo: 1454.00, maxDeal: "-", arp: "1,454.00" },
+    { id: "hextan-plus", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN PLUS", descrizione: "Losartan Potassium 50mg + HCTZ 12.5mg FCT", pack: "100's", prezzo: 1980.00, maxDeal: "5+5/10+15/15+25", arp: "1,980.00*" },
+    { id: "olmepas", categoria: "CARDIOVASCULAR PRODUCTS", nome: "OLMEPAS", descrizione: "Olmesartan Medoxomil 20mg FCT", pack: "30's", prezzo: 1208.00, maxDeal: "-", arp: "1,208.00" },
+    { id: "plavihex", categoria: "CARDIOVASCULAR PRODUCTS", nome: "PLAVIHEX*", descrizione: "Clopidogrel 75mg Tablet", pack: "100's", prezzo: 3176.00, maxDeal: "-", arp: "3,176.00" },
+    { id: "colixtan", categoria: "CARDIOVASCULAR PRODUCTS", nome: "COLIXTAN", descrizione: "Losartan Potassium + Amlodipine Besilate 50mg/5mg FCT", pack: "100's", prezzo: 1725.00, maxDeal: "8+1", arp: "1,725.00" },
+    { id: "ardilol", categoria: "CARDIOVASCULAR PRODUCTS", nome: "ARDILOL", descrizione: "Carvedilol 6.25mg Tablet", pack: "30's", prezzo: 345.00, maxDeal: "-", arp: "345.00" },
+    { id: "truvast", categoria: "CARDIOVASCULAR PRODUCTS", nome: "TRUVAST", descrizione: "Atorvastatin Calcium 20mg Film-Coated Tablet", pack: "100's", prezzo: 2915.00, maxDeal: "-", arp: "2,915.00" },
+    { id: "stravas", categoria: "CARDIOVASCULAR PRODUCTS", nome: "STRAVAS", descrizione: "Rosuvastatin Calcium 10mg Film-Coated Tablet", pack: "30's", prezzo: 863.00, maxDeal: "5+5/10+15", arp: "863.00" },
+    { id: "finora", categoria: "CARDIOVASCULAR PRODUCTS", nome: "FINORA", descrizione: "Fenofibrate 200mg Capsule", pack: "100's", prezzo: 2800.00, maxDeal: "5+5/10+15/15+25", arp: "3,136.00" },
+    { id: "amtaz", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMTAZ", descrizione: "Trimetazidine HCI 35mg Modified-Release Tablet", pack: "30's", prezzo: 587.00, maxDeal: "-", arp: "657.44" },
+
+    // ANTIBACTERIAL PRODUCTS
+    { id: "ciflomed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "CIFLOMED", descrizione: "Ciprofloxacin 500mg Film-Coated Tablet", pack: "100's", prezzo: 3300.00, maxDeal: "5+5/10+20", arp: "3,696.00" },
+    { id: "dalamed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "DALAMED", descrizione: "Clindamycin 300mg Capsule", pack: "100's", prezzo: 5440.00, maxDeal: "8+1", arp: "6,092.80" },
+    { id: "klarimed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "KLARIMED", descrizione: "Clarithromycin 500mg Film-Coated Tablet", pack: "30's", prezzo: 1668.00, maxDeal: "5+5/10+15", arp: "1,868.16" },
+    { id: "limoclav", categoria: "ANTIBACTERIAL PRODUCTS", nome: "LIMOCLAV", descrizione: "Co-amoxiclav 625mg FCT", pack: "21's", prezzo: 1087.00, maxDeal: "8+1", arp: "1,217.44" },
+    { id: "limoxil", categoria: "ANTIBACTERIAL PRODUCTS", nome: "LIMOXIL", descrizione: "Amoxicillin Trihydrate 500mg Capsule", pack: "100's", prezzo: 1150.00, maxDeal: "N/A", arp: "1,288.00" },
+    { id: "trufix", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRUFIX", descrizione: "Cefixime Trihydrate 200mg Capsule", pack: "10's", prezzo: 1265.00, maxDeal: "8+1", arp: "1,416.80" },
+    { id: "trulev", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRULEV", descrizione: "Levofloxacin 500mg Film-Coated Tablet", pack: "30's", prezzo: 1733.00, maxDeal: "5+5/10+20", arp: "1,940.96" },
+    { id: "truxim", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRUXIM", descrizione: "Cefuroxime Axetil 500mg Film-Coated Tablet", pack: "10's", prezzo: 690.00, maxDeal: "No FG", arp: "772.80" },
+    { id: "rozenta-susp", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA Susp", descrizione: "Azithromycin 200mg/5ml Powder for Oral suspension", pack: "1's", prezzo: 403.00, maxDeal: "No FG", arp: "451.36" },
+    { id: "rozenta-tab", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA Tab", descrizione: "Azithromycin 500mg Film-coated Tablet", pack: "30's", prezzo: 2640.00, maxDeal: "-", arp: "2,956.80" },
+    { id: "amrid", categoria: "ANTIBACTERIAL PRODUCTS", nome: "AMRID", descrizione: "Metronidazole 500mg Tablet", pack: "100's", prezzo: 1150.00, maxDeal: "8+1", arp: "1,288.00" },
+    { id: "procin", categoria: "ANTIBACTERIAL PRODUCTS", nome: "PROCIN", descrizione: "Mupirocin 20mg/g (2% w/w) Ointment, 5G/tube", pack: "1's", prezzo: 173.00, maxDeal: "-", arp: "193.76" },
+
+    // TOPICAL CORTICOSTEROIDS
+    { id: "solbina", categoria: "TOPICAL CORTICOSTEROIDS", nome: "SOLBINA", descrizione: "Clobetasol propionate 500 mcg/g (0.05% w/w) Topical Cream, 10G/tube", pack: "1's", prezzo: 345.00, maxDeal: "8+1", arp: "386.40" },
+
+    // METABOLIC PRODUCT
+    { id: "glimep", categoria: "METABOLIC PRODUCT", nome: "GLIMEP", descrizione: "Glimepiride 2mg Tablet", pack: "100's", prezzo: 1127.00, maxDeal: "8+1", arp: "1,127.00" },
+
+    // PROTON PUMP INHIBITORS
+    { id: "sazol", categoria: "PROTON PUMP INHIBITORS", nome: "SAZOL", descrizione: "Esomeprazole 40mg Delayed Release Tablet", pack: "30's", prezzo: 1800.00, maxDeal: "-", arp: "2,016.00" },
+    { id: "nexopraz-40", categoria: "PROTON PUMP INHIBITORS", nome: "NEXOPRAZ 40", descrizione: "Esomeprazole 40mg Enteric Coated Tablet", pack: "100's", prezzo: 6050.00, maxDeal: "8+1", arp: "6,776.00" },
+    { id: "trumeprazole", categoria: "PROTON PUMP INHIBITORS", nome: "TRUMEPRAZOLE", descrizione: "Omeprazole 20mg Delayed Release Capsule", pack: "100's", prezzo: 3630.00, maxDeal: "-", arp: "4,065.60" },
+
+    // ANTI-HISTAMINE
+    { id: "levorin", categoria: "ANTI-HISTAMINE", nome: "LEVORIN", descrizione: "Levocetirizine Dihydrochloride 5mg FCT", pack: "30's", prezzo: 1100.00, maxDeal: "8+1", arp: "1,232.00" },
+    { id: "sinuzerc", categoria: "ANTI-HISTAMINE", nome: "SINUZERC", descrizione: "Loratadine 10mg Tablet", pack: "100's", prezzo: 1500.00, maxDeal: "-", arp: "1,680.00" },
+    { id: "xytozen", categoria: "ANTI-HISTAMINE", nome: "XYTOZEN", descrizione: "Montelukast 10mg + Levocetirizine Hydrochloride 5mg Film-coated Tablet", pack: "30's", prezzo: 1035.00, maxDeal: "-", arp: "1,159.20" },
+
+    // ANTI-VERTIGO
+    { id: "verahit", categoria: "ANTI-VERTIGO", nome: "VERAHIT", descrizione: "Betahistine Hydrochloride 16mg tablet", pack: "100's", prezzo: 2300.00, maxDeal: "8+1", arp: "2,576.00" },
+
+    // LEUKOTRIENE RECEPTOR ANTAGONIST
+    { id: "monlastik", categoria: "LEUKOTRIENE RECEPTOR ANTAGONIST", nome: "MONLASTIK", descrizione: "Montelukast 10mg Film-coated Tablet", pack: "100's", prezzo: 3300.00, maxDeal: "8+1", arp: "3,696.00" },
+
+    // ANALGESIC
+    { id: "trucox", categoria: "ANALGESIC", nome: "TRUCOX", descrizione: "Celecoxib 200mg Capsule", pack: "30's", prezzo: 1012.00, maxDeal: "-", arp: "1,133.44" },
+    { id: "memaray", categoria: "ANALGESIC", nome: "MEMARAY", descrizione: "Mefenamic Acid 500mg Capsule", pack: "100's", prezzo: 1265.00, maxDeal: "8+1", arp: "1,416.80" },
+    { id: "lotram-plus", categoria: "ANALGESIC", nome: "LOTRAM PLUS", descrizione: "Tramadol 37.5mg + Paracetamol 325 mg FCT", pack: "100's", prezzo: 3000.00, maxDeal: "8+1", arp: "3,360.00" },
+    { id: "lotram", categoria: "ANALGESIC", nome: "LOTRAM", descrizione: "Tramadol Hydrochloride 50mg FCT", pack: "100's", prezzo: 1150.00, maxDeal: "8+1", arp: "1,288.00" },
+
+    // CHOLELITHOLYTIC & HEPATIC PROTECTOR
+    { id: "colimax", categoria: "CHOLELITHOLYTIC & HEPATIC PROTECTOR", nome: "COLIMAX", descrizione: "Ursodeoxycholic Acid 300mg FCT", pack: "100's", prezzo: 4500.00, maxDeal: "8+1", arp: "5,040.00" },
+
+    // ANTI-GOUT
+    { id: "acugout", categoria: "ANTI-GOUT", nome: "ACUGOUT", descrizione: "Colchicine 500mcg Tablet", pack: "100's", prezzo: 518.00, maxDeal: "-", arp: "580.16" },
+    { id: "xozid", categoria: "ANTI-GOUT", nome: "XOZID", descrizione: "Febuxostat 40mg FCT", pack: "30's", prezzo: 794.00, maxDeal: "8+1", arp: "889.28" },
+
+    // ANTI-EPILEPTIC / DIABETIC NEUROPATHY
+    { id: "convuliz", categoria: "ANTI-EPILEPTIC / DIABETIC NEUROPATHY", nome: "CONVULIZ", descrizione: "Pregabalin 75mg Capsule", pack: "28's", prezzo: 1030.00, maxDeal: "8+1", arp: "1,030.40" },
+
+    // ANTI-ANEMIA PRESCRIPTION DRUG
+    { id: "folmaterna", categoria: "ANTI-ANEMIA PRESCRIPTION DRUG", nome: "FOLMATERNA", descrizione: "Folic Acid 5mg Capsule", pack: "100's", prezzo: 920.00, maxDeal: "8+1", arp: "1,030.40" },
+
+    // ALPHA-1 ADRENORECEPTOR ANTAGONIST
+    { id: "prostulax", categoria: "ALPHA-1 ADRENORECEPTOR ANTAGONIST", nome: "PROSTULAX", descrizione: "Tamsulosin Hydrochloride 400mcg Prolonged Release Tablet", pack: "30's", prezzo: 1380.00, maxDeal: "8+1", arp: "1,545.60" },
+
+    // NUTRITIONALS
+    { id: "iromax-plus", categoria: "NUTRITIONALS", nome: "IROMAX PLUS", descrizione: "Ferrous Ascorbate, L-Methyl Folate, Vitamins & Minerals FCT", pack: "30's", prezzo: 600.00, maxDeal: "-", arp: "672.00" },
+    { id: "gutzorb", categoria: "NUTRITIONALS", nome: "GUTZORB", descrizione: "Probiotics + Gastric Enzymes Capsule", pack: "100's", prezzo: 4500.00, maxDeal: "-", arp: "5,040.00" },
+    { id: "livoplex", categoria: "NUTRITIONALS", nome: "LIVOPLEX", descrizione: "Silymarin 150mg + Vit B1, B6, B12 Capsule", pack: "30's", prezzo: 518.00, maxDeal: "10+1", arp: "580.16" },
+    { id: "senphos", categoria: "NUTRITIONALS", nome: "SENPHOS", descrizione: "Essential Phospholipids 300mg + Vit. B & E capsule", pack: "50's", prezzo: 1495.00, maxDeal: "-", arp: "1,674.40" },
+    { id: "menacal", categoria: "NUTRITIONALS", nome: "MENACAL", descrizione: "Calcium Citrate + Vit. K2-7 with Mg, Zn, and Vit D3 1.5G FCT", pack: "90's", prezzo: 1035.00, maxDeal: "-", arp: "1,159.20" },
+    { id: "morfera", categoria: "NUTRITIONALS", nome: "MORFERA", descrizione: "Moringa Oleifera 500mg Capsule", pack: "100's", prezzo: 719.00, maxDeal: "-", arp: "805.28" },
+    { id: "momma-vit", categoria: "NUTRITIONALS", nome: "MOMMA VIT", descrizione: "Pre & Post Natal Vitamins with Folic Acid, Taurine, DHA & EPA Softgel", pack: "30's", prezzo: 760.00, maxDeal: "No FG", arp: "851.20" },
+    { id: "powergold", categoria: "NUTRITIONALS", nome: "POWERGOLD", descrizione: "Multivitamins & Minerals with Ginseng, Deanol & Rutin Softgel", pack: "30's", prezzo: 700.00, maxDeal: "-", arp: "784.00" },
+    { id: "sleepeasy", categoria: "NUTRITIONALS", nome: "SLEEPEASY", descrizione: "Melatonin 3mg Softgel", pack: "30's", prezzo: 690.00, maxDeal: "-", arp: "772.80" },
+    { id: "sleepeasy-plus", categoria: "NUTRITIONALS", nome: "SLEEPEASY PLUS", descrizione: "Lactium Casein Hydrolysate 75mg L-theanine 125mg Melatonin 3mg Tablet", pack: "30's", prezzo: 900.00, maxDeal: "10+1", arp: "1,008.00" },
+    { id: "truceevit", categoria: "NUTRITIONALS", nome: "TRUCEEVIT", descrizione: "Ascorbic Acid (as Sodium Ascorbate) 500mg Capsule", pack: "100's", prezzo: 690.00, maxDeal: "-", arp: "772.80" },
+    { id: "lubruoint-od", categoria: "NUTRITIONALS", nome: "LUBRUOINT OD", descrizione: "Glucosamine 1500 mg Film-coated Tablet", pack: "30's", prezzo: 1500.00, maxDeal: "-", arp: "1,680.00" },
+    { id: "peatide", categoria: "NUTRITIONALS", nome: "PEATIDE", descrizione: "Palmitic Acid Monoethanolamide 150mg, Cytidine 15mg, Uridine 9mg, Folic Acid 176mcg and Cyanocobalamin 2.2mcg Capsule", pack: "30's", prezzo: 1200.00, maxDeal: "-", arp: "1,344.00" }
+];
+
+let catalogData = [];
+
+// Inizializzazione applicazione
+document.addEventListener("DOMContentLoaded", async () => {
+    const dataOggi = new Date().toISOString().split('T')[0];
+    const inputData = document.getElementById('ordineData');
+    if (inputData) inputData.value = dataOggi;
+
+    await caricaCatalogoDaFirestore();
+    caricaOrdiniSalvati();
+});
+
+// Sincronizzazione Catalogo con Firestore
+async function caricaCatalogoDaFirestore() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "catalogo"));
+        if (querySnapshot.empty) {
+            console.log("Inizializzazione database con il catalogo ufficiale...");
+            for (const item of catalogoIniziale) {
+                await setDoc(doc(db, "catalogo", item.id), item);
+            }
+            catalogData = [...catalogoIniziale];
+        } else {
+            catalogData = [];
+            querySnapshot.forEach((docSnap) => {
+                catalogData.push({ id: docSnap.id, ...docSnap.data() });
+            });
+        }
+        renderizzaCatalogo();
+        ricalcolaTotale();
+    } catch (error) {
+        console.error("Errore caricamento catalogo da Firestore, uso catalogo locale:", error);
+        catalogData = [...catalogoIniziale];
+        renderizzaCatalogo();
+        ricalcolaTotale();
+    }
+}
+
+// Renderizzazione Catalogo con pulsanti - e +
+window.renderizzaCatalogo = function() {
+    const container = document.getElementById('categorieContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const categorieMap = {};
+    catalogData.forEach(item => {
+        if (!categorieMap[item.categoria]) {
+            categorieMap[item.categoria] = [];
+        }
+        categorieMap[item.categoria].push(item);
+    });
+
+    for (const [catNome, prodotti] of Object.entries(categorieMap)) {
+        const categoriaDiv = document.createElement('div');
+        categoriaDiv.className = 'border border-slate-200/80 rounded-xl overflow-hidden bg-white shadow-2xs';
+        
+        let prodottiHtml = '';
+        prodotti.forEach(p => {
+            const quantitaCorrente = p.quantita || 0;
+            prodottiHtml += `
+                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
+                    <td class="px-3 py-2.5 font-medium text-slate-900">
+                        ${p.nome}
+                        <div class="text-[10px] text-slate-400 font-normal">${p.descrizione}</div>
+                    </td>
+                    <td class="px-2 py-2.5 text-slate-600 text-center">${p.pack}</td>
+                    <td class="px-2 py-2.5 text-slate-700 font-semibold text-right">₱${Number(p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="px-2 py-2.5 text-slate-500 text-center font-mono text-[11px]">${p.maxDeal || '-'}</td>
+                    <td class="px-2 py-2.5 text-slate-700 text-center font-medium">₱${p.arp || '-'}</td>
+                    <td class="px-2 py-2.5 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button type="button" onclick="cambiaQuantita('${p.id}', -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center justify-center transition-colors text-sm select-none">-</button>
+                            <input type="number" id="qty_${p.id}" min="0" value="${quantitaCorrente}" onchange="aggiornaQuantitaDaInput('${p.id}', this.value)" 
+                                class="w-12 text-center border border-slate-200 rounded-lg py-1 px-1 focus:outline-none focus:border-slate-500 font-medium text-xs">
+                            <button type="button" onclick="cambiaQuantita('${p.id}', 1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center justify-center transition-colors text-sm select-none">+</button>
+                        </div>
+                    </td>
+                    <td id="subtotal-${p.id}" class="px-3 py-2.5 text-right font-semibold text-slate-900">
+                        ₱${(quantitaCorrente * p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                    </td>
+                </tr>
+            `;
+        });
+
+        categoriaDiv.innerHTML = `
+            <div class="bg-slate-100 px-4 py-2.5 font-semibold text-xs text-slate-700 uppercase tracking-wider border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleCategoria(this)">
+                <span>📂 ${catNome} (${prodotti.length})</span>
+                <span class="text-[10px] text-slate-500">▼</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50/50 text-[11px] text-slate-400 uppercase tracking-wider">
+                            <th class="px-3 py-2">Brand / Description</th>
+                            <th class="px-2 py-2 text-center">Pack</th>
+                            <th class="px-2 py-2 text-right">Price Net VAT</th>
+                            <th class="px-2 py-2 text-center">Max Deal Reg.</th>
+                            <th class="px-2 py-2 text-center">ARP w/ Deals</th>
+                            <th class="px-2 py-2 text-center">Qty</th>
+                            <th class="px-3 py-2 text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${prodottiHtml}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        container.appendChild(categoriaDiv);
+    }
+}
+
+window.toggleCategoria = function(headerEl) {
+    const tableContainer = headerEl.nextElementSibling;
+    if (tableContainer.style.display === 'none') {
+        tableContainer.style.display = 'block';
+        headerEl.querySelector('span:last-child').textContent = '▼';
+    } else {
+        tableContainer.style.display = 'none';
+        headerEl.querySelector('span:last-child').textContent = '▶';
+    }
+}
+
+window.espandiTutto = function(apri) {
+    const containers = document.querySelectorAll('#categorieContainer > div > div:last-child');
+    const icons = document.querySelectorAll('#categorieContainer > div > div:first-child span:last-child');
+    containers.forEach(c => c.style.display = apri ? 'block' : 'none');
+    icons.forEach(i => i.textContent = apri ? '▼' : '▶');
+}
+
+// Funzione richiamata dai pulsanti - e +
+window.cambiaQuantita = function(id, delta) {
+    const inputEl = document.getElementById(`qty_${id}`);
+    if (!inputEl) return;
+
+    let valoreAttuale = parseInt(inputEl.value) || 0;
+    let nuovoValore = valoreAttuale + delta;
+    if (nuovoValore < 0) nuovoValore = 0;
+
+    inputEl.value = nuovoValore;
+    impostaQuantitaProdotto(id, nuovoValore);
+}
+
+// Funzione richiamata se l'utente digita direttamente nel campo numerico
+window.aggiornaQuantitaDaInput = function(id, valore) {
+    let nuovoValore = parseInt(valore) || 0;
+    if (nuovoValore < 0) nuovoValore = 0;
+    
+    const inputEl = document.getElementById(`qty_${id}`);
+    if (inputEl) inputEl.value = nuovoValore;
+
+    impostaQuantitaProdotto(id, nuovoValore);
+}
+
+function impostaQuantitaProdotto(id, valore) {
+    const prod = catalogData.find(p => p.id === id);
+    if (prod) {
+        prod.quantita = valore;
+        const subtotalEl = document.getElementById(`subtotal-${id}`);
+        if (subtotalEl) {
+            subtotalEl.textContent = `₱${(prod.quantita * prod.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        }
+        ricalcolaTotale();
+    }
+}
+
+function ricalcolaTotale() {
+    let totale = 0;
+    let countItems = 0;
+    let previewHtml = '';
+
+    catalogData.forEach(p => {
+        const q = p.quantita || 0;
+        if (q > 0) {
+            const sub = q * p.prezzo;
+            totale += sub;
+            countItems += q;
+            previewHtml += `<div class="flex justify-between items-center text-xs py-1 border-b border-slate-100">
+                <span class="font-medium text-slate-800">${p.nome} (x${q})</span>
+                <span class="text-slate-600 font-semibold">₱${sub.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+            </div>`;
+        }
+    });
+
+    const labelTotale = document.getElementById('labelTotale');
+    const labelResiduo = document.getElementById('labelResiduo');
+    const labelPercentuale = document.getElementById('labelPercentuale');
+    const progressBar = document.getElementById('progressBar');
+    const countSelezionati = document.getElementById('countSelezionati');
+    const quickPreview = document.getElementById('quickSelectedPreview');
+
+    if (labelTotale) labelTotale.textContent = `₱${totale.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    
+    const residuo = Math.max(0, TARGET_ANNUALE - totale);
+    if (labelResiduo) labelResiduo.textContent = `₱${residuo.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+    const percentuale = Math.min(100, (totale / TARGET_ANNUALE) * 100);
+    if (labelPercentuale) labelPercentuale.textContent = `${percentuale.toFixed(1)}% of target used`;
+    if (progressBar) progressBar.style.width = `${percentuale}%`;
+    if (countSelezionati) countSelezionati.textContent = countItems;
+
+    if (quickPreview) {
+        quickPreview.innerHTML = previewHtml || '<p class="text-slate-400 italic">No products selected yet.</p>';
+    }
+}
+
+window.azzeraQuantita = function() {
+    catalogData.forEach(p => p.quantita = 0);
+    renderizzaCatalogo();
+    ricalcolaTotale();
+}
+
+window.resettaTutto = function() {
+    if (confirm("Vuoi ripristinare le quantità e ricaricare il catalogo standard?")) {
+        window.azzeraQuantita();
+    }
+}
+
+// Gestione Modale Nuovo Prodotto
+window.apriModalNuovoProdotto = function() {
+    document.getElementById('modalProdotto').classList.remove('hidden');
+}
+
+window.chiudiModalNuovoProdotto = function() {
+    document.getElementById('modalProdotto').classList.add('hidden');
+}
+
+window.salvaNuovoProdotto = async function() {
+    const categoria = document.getElementById('nuovaCategoria').value;
+    const nome = document.getElementById('nuovoNome').value.trim();
+    const pack = document.getElementById('nuovoPack').value.trim();
+    const prezzo = parseFloat(document.getElementById('nuovoPrezzo').value);
+
+    if (!nome || isNaN(prezzo)) {
+        alert("Inserisci un nome valido e un prezzo corretto.");
+        return;
+    }
+
+    const nuovoId = 'prod-' + Date.now();
+    const nuovoItem = { id: nuovoId, categoria, nome, descrizione: nome, pack: pack || "100's", prezzo, maxDeal: "-", arp: prezzo.toFixed(2), quantita: 0 };
+
+    try {
+        await setDoc(doc(db, "catalogo", nuovoId), nuovoItem);
+        catalogData.push(nuovoItem);
+        renderizzaCatalogo();
+        chiudiModalNuovoProdotto();
+        document.getElementById('nuovoNome').value = '';
+        document.getElementById('nuovoPrezzo').value = '';
+    } catch (error) {
+        console.error("Errore salvataggio nuovo prodotto su Firestore:", error);
+        alert("Errore durante il salvataggio.");
+    }
+}
+
+// Salvataggio ordine e storico su Firestore
+window.salvaOrdineCorrente = async function() {
+    const cliente = document.getElementById('clienteNome').value.trim();
+    if (!cliente) {
+        alert("Inserisci il nome del cliente / medico prima di salvare l'ordine.");
+        return;
+    }
+
+    const prodottiSelezionati = catalogData.filter(p => (p.quantita || 0) > 0);
+    if (prodottiSelezionati.length === 0) {
+        alert("Seleziona almeno un prodotto prima di salvare l'ordine.");
+        return;
+    }
+
+    let totaleOrdine = prodottiSelezionati.reduce((acc, p) => acc + (p.quantita * p.prezzo), 0);
+
+    const ordineData = {
+        cliente,
+        note: document.getElementById('ordineNote').value,
+        noteExtra: document.getElementById('ordineNoteExtra').value,
+        data: document.getElementById('ordineData').value,
+        totale: totaleOrdine,
+        prodotti: prodottiSelezionati.map(p => ({ id: p.id, nome: p.nome, quantita: p.quantita, prezzo: p.prezzo, subtotal: p.quantita * p.prezzo }))
+    };
+
+    try {
+        await addDoc(collection(db, "ordini"), ordineData);
+        alert("Ordine salvato con successo nel database!");
+        caricaOrdiniSalvati();
+    } catch (error) {
+        console.error("Errore salvataggio ordine:", error);
+        alert("Errore nel salvataggio dell'ordine.");
+    }
+}
+
+// Recupero e rendering degli ordini salvati dal backend (Firestore)
+async function caricaOrdiniSalvati() {
+    const listaContainer = document.getElementById('listaOrdiniSalvati');
+    if (!listaContainer) return;
+
+    try {
+        const querySnapshot = await getDocs(collection(db, "ordini"));
+        if (querySnapshot.empty) {
+            listaContainer.innerHTML = '<p class="text-slate-400 italic text-xs">No saved orders yet.</p>';
+            return;
+        }
+
+        let html = '';
+        querySnapshot.forEach((docSnap) => {
+            const o = docSnap.data();
+
+            html += `
+                <div onclick="caricaOrdineDalBackend('${docSnap.id}')" class="bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl p-2.5 flex justify-between items-center text-xs cursor-pointer transition-colors group">
+                    <div>
+                        <span class="font-semibold text-slate-800 group-hover:text-slate-900">${o.cliente}</span>
+                        <div class="text-[10px] text-slate-400">${o.data} - ₱${Number(o.totale).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                    </div>
+                    <button onclick="event.stopPropagation(); eliminaOrdine('${docSnap.id}')" class="text-rose-400 hover:text-rose-600 font-medium px-1.5 py-0.5">✕</button>
+                </div>
+            `;
+        });
+        listaContainer.innerHTML = html;
+    } catch (error) {
+        console.error("Errore recupero ordini:", error);
+    }
+}
+
+// Funzione per scaricare e aprire l'ordine direttamente dal backend (Firestore) al click
+window.caricaOrdineDalBackend = async function(idOrdine) {
+    try {
+        const docRef = doc(db, "ordini", idOrdine);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            alert("Ordine non trovato nel database.");
+            return;
+        }
+
+        const ordine = docSnap.data();
+
+        // 1. Compila i campi del form con i dati salvati nel backend
+        if (document.getElementById('clienteNome')) document.getElementById('clienteNome').value = ordine.cliente || '';
+        if (document.getElementById('ordineNote')) document.getElementById('ordineNote').value = ordine.note || '';
+        if (document.getElementById('ordineNoteExtra')) document.getElementById('ordineNoteExtra').value = ordine.noteExtra || '';
+        if (document.getElementById('ordineData')) document.getElementById('ordineData').value = ordine.data || '';
+
+        // 2. Azzera tutte le quantità correnti nel catalogo
+        catalogData.forEach(p => p.quantita = 0);
+
+        // 3. Ripristina le quantità salvate nell'ordine del backend
+        if (ordine.prodotti && Array.isArray(ordine.prodotti)) {
+            ordine.prodotti.forEach(itemProd => {
+                const prodTrovato = catalogData.find(p => p.id === itemProd.id || p.nome === itemProd.nome);
+                if (prodTrovato) {
+                    prodTrovato.quantita = itemProd.quantita || 0;
+                }
+            });
+        }
+
+        // 4. Aggiorna l'interfaccia a schermo
+        renderizzaCatalogo();
+        ricalcolaTotale();
+        window.espandiTutto(true);
+
+    } catch (error) {
+        console.error("Errore durante il caricamento dell'ordine dal backend:", error);
+        alert("Impossibile caricare l'ordine dal database.");
+    }
+}
+
+window.eliminaOrdine = async function(id) {
+    if (confirm("Vuoi eliminare questo ordine salvato dal database?")) {
+        try {
+            await deleteDoc(doc(db, "ordini", id));
+            caricaOrdiniSalvati();
+        } catch (error) {
+            console.error("Errore eliminazione ordine:", error);
+        }
+    }
+}
+
+// Esportazione PDF Ufficiale con Layout Tabellare Professionale (AutoTable)
+window.esportaPDF = function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const cliente = document.getElementById('clienteNome').value.trim() || 'N/A';
+    const note = document.getElementById('ordineNote').value.trim() || 'N/A';
+    const noteExtra = document.getElementById('ordineNoteExtra').value.trim() || 'N/A';
+    const dataOrdine = document.getElementById('ordineData').value || new Date().toISOString().split('T')[0];
+
+    const prodottiSelezionati = catalogData.filter(p => (p.quantita || 0) > 0);
+    if (prodottiSelezionati.length === 0) {
+        alert("Nessun prodotto selezionato per l'esportazione PDF.");
+        return;
+    }
+
+    // --- HEADER DOCUMENTO ---
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.text("TRUMED ORDER MANAGEMENT", 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(71, 85, 105); // slate-600
+    doc.text("OFFICIAL PURCHASE ORDER", 14, 26);
+
+    // Linea divisoria
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.setLineWidth(0.5);
+    doc.line(14, 30, 196, 30);
+
+    // --- DETTAGLI ORDINE / CLIENTE ---
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(51, 65, 85);
+    doc.text("Client / Doctor / Clinic:", 14, 37);
+    doc.text("References / Notes:", 14, 43);
+    doc.text("Date:", 14, 49);
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(15, 23, 42);
+    doc.text(cliente, 55, 37);
+    doc.text(note, 55, 43);
+    doc.text(dataOrdine, 55, 49);
+
+    // --- TABELLA PRODOTTI ---
+    const tableBody = prodottiSelezionati.map(p => [
+        p.nome,
+        p.descrizione,
+        p.pack,
+        `PHP ${Number(p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}`,
+        p.quantita.toString(),
+        `PHP ${(p.quantita * p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}`
+    ]);
+
+    let totaleComplessivo = prodottiSelezionati.reduce((acc, p) => acc + (p.quantita * p.prezzo), 0);
+
+    doc.autoTable({
+        startY: 55,
+        head: [['Brand Name', 'Description', 'Pack', 'Price (Net VAT)', 'Qty', 'Subtotal']],
+        body: tableBody,
+        margin: { left: 14, right: 14 },
+        theme: 'striped',
+        headStyles: {
+            fillColor: [15, 23, 42],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 9,
+            halign: 'left'
+        },
+        bodyStyles: {
+            fontSize: 8,
+            textColor: [51, 65, 85],
+            font: 'helvetica'
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 35 },
+            1: { cellWidth: 'auto' },
+            2: { halign: 'center', cellWidth: 20 },
+            3: { halign: 'right', cellWidth: 30 },
+            4: { halign: 'center', cellWidth: 15 },
+            5: { halign: 'right', fontStyle: 'bold', cellWidth: 32 }
+        },
+        foot: [[
+            { content: 'TOTAL AMOUNT (Net VAT):', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9 } },
+            { content: `PHP ${totaleComplessivo.toLocaleString('en-US', {minimumFractionDigits: 2})}`, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9, textColor: [15, 23, 42] } }
+        ]],
+        footStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42]
+        }
+    });
+
+    // --- NOTE SPECIALI ---
+    if (noteExtra !== 'N/A' && noteExtra.trim() !== '') {
+        const finalY = doc.lastAutoTable.finalY + 10;
+        if (finalY < 270) {
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(51, 65, 85);
+            doc.text("Special Instructions:", 14, finalY);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            const splitNotes = doc.splitTextToSize(noteExtra, 180);
+            doc.text(splitNotes, 14, finalY + 5);
+        }
+    }
+
+    doc.save(`Trumed_Order_${cliente.replace(/\s+/g, '_')}.pdf`);
+};
