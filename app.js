@@ -152,38 +152,38 @@ function popolaSelectCategorie() {
 
 // Sincronizzazione ad altissima velocità: legge il catalogo senza sovrascrivere 57 volte a ogni avvio
 async function caricaCatalogoDaFirestore() {
-    try {
-        console.log("Caricamento rapido del catalogo da Firestore...");
-        
-        const querySnapshot = await getDocs(collection(db, "catalogo"));
-        
-        if (querySnapshot.empty) {
-            console.log("Database vuoto: popolamento iniziale...");
-            for (const item of prodottiData) {
-                await setDoc(doc(db, "catalogo", item.id), item);
-            }
-            const snapshotIniziale = await getDocs(collection(db, "catalogo"));
-            catalogData = [];
-            snapshotIniziale.forEach((docSnap) => {
-                catalogData.push({ id: docSnap.id, ...docSnap.data() });
-            });
-        } else {
-            catalogData = [];
-            querySnapshot.forEach((docSnap) => {
-                catalogData.push({ id: docSnap.id, ...docSnap.data() });
-            });
+    const CACHE_KEY = 'trumed_catalogo_cache';
+    
+    // 1. VERIFICA E CARICAMENTO DA CACHE LOCALE (Istantaneo)
+    const datiInCache = localStorage.getItem(CACHE_KEY);
+    if (datiInCache) {
+        try {
+            const prodottiDaCache = JSON.parse(datiInCache);
+            // Funzione che popola la tua interfaccia/dropdown dei prodotti
+            popolaTabellaOSelettoreProdotti(prodottiDaCache); 
+        } catch (e) {
+            console.error("Errore nel parsing della cache:", e);
         }
+    }
 
-        console.log(`Catalogo pronto! Totale prodotti attivi: ${catalogData.length}`);
-        renderizzaCatalogo();
-        popolaSelectCategorie();
-        ricalcolaTotale();
+    // 2. AGGIORNAMENTO SILENZIOSO DA FIRESTORE (In background)
+    try {
+        const querySnapshot = await getDocs(collection(db, "prodotti")); // Adatta al nome della tua collection
+        const prodottiAggiornati = [];
+        querySnapshot.forEach((doc) => {
+            prodottiAggiornati.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Salva i dati freschi nel localStorage per i prossimi avvii
+        localStorage.setItem(CACHE_KEY, JSON.stringify(prodottiAggiornati));
+
+        // Se non c'era una cache precedente, aggiorna la vista adesso
+        if (!datiInCache) {
+            popolaTabellaOSelettoreProdotti(prodottiAggiornati);
+        }
     } catch (error) {
-        console.error("Errore durante il caricamento del catalogo:", error);
-        catalogData = [...prodottiData];
-        renderizzaCatalogo();
-        popolaSelectCategorie();
-        ricalcolaTotale();
+        console.error("Impossibile aggiornare il catalogo da Firestore:", error);
+        // Se la rete fallisce ma avevamo la cache, l'app continua a funzionare perfettamente!
     }
 }
 
