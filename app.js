@@ -147,60 +147,80 @@ function popolaSelectCategorie() {
 }
 
 // ==========================================
-// CARICAMENTO CATALOGO CON CACHE LOCALE (Stale-While-Revalidate)
+// CARICAMENTO CATALOGO CON CACHE + REFRESH LIVE
 // ==========================================
 async function caricaCatalogoDaFirestore() {
     const CACHE_KEY = 'trumed_catalogo_cache';
     
-    // 1. Caricamento istantaneo da localStorage (se presente)
+    // 1. CARICAMENTO ISTANTANEO DA LOCALSTORAGE
     const datiInCache = localStorage.getItem(CACHE_KEY);
     if (datiInCache) {
         try {
             catalogData = JSON.parse(datiInCache);
-            console.log("Catalogo caricato istantaneamente da cache locale.");
+            console.log("⚡ Catalogo caricato istantaneamente da cache locale.");
             renderizzaCatalogo();
             popolaSelectCategorie();
             ricalcolaTotale();
         } catch (e) {
-            console.error("Errore nel parsing della cache locale:", e);
-        }
-    }
-
-    // 2. Aggiornamento silenzioso in background da Firestore
-    try {
-        console.log("Sincronizzazione catalogo da Firestore in corso...");
-        const querySnapshot = await getDocs(collection(db, "catalogo"));
-        
-        if (querySnapshot.empty) {
-            console.log("Database vuoto: popolamento iniziale...");
-            for (const item of prodottiData) {
-                await setDoc(doc(db, "catalogo", item.id), item);
-            }
-            catalogData = [...prodottiData];
-        } else {
-            const prodottiServer = [];
-            querySnapshot.forEach((docSnap) => {
-                prodottiServer.push({ id: docSnap.id, ...docSnap.data() });
-            });
-            catalogData = prodottiServer;
-        }
-
-        // Salva i dati aggiornati nel localStorage
-        localStorage.setItem(CACHE_KEY, JSON.stringify(catalogData));
-
-        console.log(`Catalogo aggiornato da Firestore! Totale prodotti: ${catalogData.length}`);
-        renderizzaCatalogo();
-        popolaSelectCategorie();
-        ricalcolaTotale();
-
-    } catch (error) {
-        console.error("Impossibile aggiornare da Firestore, utilizzo dati correnti/fallback:", error);
-        if (catalogData.length === 0) {
+            console.error("Errore lettura cache locale:", e);
             catalogData = [...prodottiData];
             renderizzaCatalogo();
             popolaSelectCategorie();
             ricalcolaTotale();
         }
+    } else {
+        // Se è il primissimo avvio assoluto e la cache è vuota, usa i dati di fallback
+        catalogData = [...prodottiData];
+        renderizzaCatalogo();
+        popolaSelectCategorie();
+        ricalcolaTotale();
+    }
+
+    // 2. AVVIO SINCRONIZZAZIONE IN BACKGROUND (Non blocca la pagina)
+    sincronizzaCatalogoBackground(CACHE_KEY);
+}
+
+// Funzione in background: scarica e aggiorna l'interfaccia "Live" se ci sono novità
+async function sincronizzaCatalogoBackground(CACHE_KEY) {
+    try {
+        console.log("🔄 Sincronizzazione background da Firestore avviata...");
+        const querySnapshot = await getDocs(collection(db, "catalogo"));
+        
+        if (!querySnapshot.empty) {
+            const prodottiServer = [];
+            querySnapshot.forEach((docSnap) => {
+                prodottiServer.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            // Preserva le quantità attualmente digitate dall'utente per evitare di resettare l'ordine in corso
+            prodottiServer.forEach(pServer => {
+                const locale = catalogData.find(p => p.id === pServer.id);
+                if (locale && locale.quantita) {
+                    pServer.quantita = locale.quantita;
+                }
+            });
+
+            // Verifica se i dati scaricati differiscono dalla cache corrente
+            const stringaNuova = JSON.stringify(prodottiServer);
+            const stringaVecchia = JSON.stringify(catalogData);
+
+            if (stringaNuova !== stringaVecchia) {
+                console.log("✨ Trovati nuovi dati nel cloud! Aggiornamento live dell'interfaccia...");
+                catalogData = prodottiServer;
+                
+                // Aggiorna la cache locale per i futuri riavvii
+                localStorage.setItem(CACHE_KEY, stringaNuova);
+
+                // Ridisegna visivamente la pagina con i dati freschi
+                renderizzaCatalogo();
+                popolaSelectCategorie();
+                ricalcolaTotale();
+            } else {
+                console.log("✅ La cache locale era già aggiornata all'ultima versione.");
+            }
+        }
+    } catch (error) {
+        console.error("Sincronizzazione background saltata (modalità offline o errore rete):", error);
     }
 }
 
