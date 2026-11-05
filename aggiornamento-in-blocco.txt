@@ -1,0 +1,27 @@
+Esattamente! Quella evidenziata nell'immagine (l'array `prodottiData` a partire dalla riga 11) è la sezione esatta del file `app.js` dove risiede il catalogo base.
+
+Ecco una breve guida passo-passo su come procedere quando riceverai un nuovo listino o PDF:
+
+---
+
+### Istruzioni per l'aggiornamento in blocco:
+
+1. **Prepara i dati**:
+* Estrai i prodotti dal nuovo PDF o listino (puoi anche incollare il testo o allegare il file direttamente qui in chat, e penserò io a formattarli correttamente per te).
+
+
+2. **Aggiorna l'array nel codice**:
+* Sostituisci o integra gli elementi all'interno di `const prodottiData = [ ... ];` (dalla riga 11 in poi) con i nuovi oggetti strutturati come gli altri.
+
+
+* *Esempio di formato richiesto per ogni riga:*
+```javascript
+{ id: "nuovo-1", categoria: "NOME CATEGORIA", nome: "BRAND", descrizione: "Descrizione dettagliata", pack: "100's", prezzo: 500.0, maxDeal: "-", arp: "500.00" },
+
+```
+
+
+
+
+3. **Salva e ricarica**:
+* Salva il file `app.js` e ricarica l'applicazione. Grazie alla sincronizzazione ibrida che abbiamo impostato, l'app si aprirà istantaneamente e aggiornerà/aggiungerà in automatico i nuovi prodotti sul cloud Firestore senza cancellare gli ordini salvati né i prodotti aggiunti manualmente tramite la modale.

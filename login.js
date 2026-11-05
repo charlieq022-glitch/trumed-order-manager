@@ -5,39 +5,39 @@ let isLoginMode = true;
 
 window.toggleAuthMode = function() {
     isLoginMode = !isLoginMode;
-    const btnSubmit = document.getElementById('btnSubmit');
-    const toggleText = document.getElementById('toggleText');
-    const btnToggle = document.getElementById('btnToggle');
-    
+    const title = document.getElementById("formTitle");
+    const btn = document.getElementById("submitBtn");
+    const toggleText = document.getElementById("toggleText");
+    const btnToggle = document.getElementById("btnToggle");
+
     if (isLoginMode) {
-        btnSubmit.textContent = "Accedi";
+        title.textContent = "Accedi a Trumed";
+        btn.textContent = "Accedi";
         toggleText.textContent = "Non hai un account?";
         btnToggle.textContent = "Registrati";
     } else {
-        btnSubmit.textContent = "Registrati";
+        title.textContent = "Registrati su Trumed";
+        btn.textContent = "Registrati";
         toggleText.textContent = "Hai già un account?";
         btnToggle.textContent = "Accedi";
     }
 }
 
-window.handleAuth = async function(event) {
-    event.preventDefault();
-    const email = document.getElementById('authEmail').value;
-    const password = document.getElementById('authPassword').value;
-    const alertBox = document.getElementById('authAlert');
-
-    alertBox.classList.add('hidden');
+document.getElementById("authForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
     try {
         if (isLoginMode) {
             await signInWithEmailAndPassword(auth, email, password);
+            window.location.href = "index.html"; // Reindirizza al gestionale dopo il login
         } else {
             await createUserWithEmailAndPassword(auth, email, password);
+            alert("Registrazione avvenuta con successo!");
+            window.location.href = "index.html";
         }
-        // Login riuscito: reindirizza alla dashboard principale (index.html)
-        window.location.href = "index.html";
     } catch (error) {
-        alertBox.textContent = "Errore: " + error.message;
-        alertBox.className = "mb-4 p-3 text-xs rounded-xl border bg-red-50 border-red-200 text-red-600";
+        alert("Errore: " + error.message);
     }
-}
+});

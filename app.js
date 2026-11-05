@@ -7,64 +7,65 @@ import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc } from "htt
 
 let TARGET_ANNUALE = 1000000; 
 
-const catalogoIniziale = [
-    { id: "amlix-5", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX 5mg*", descrizione: "Amlodipine Besilate 5mg Tablet", pack: "100's", prezzo: 825.00, maxDeal: "-", arp: "825.00" },
-    { id: "amlix-10", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX 10mg*", descrizione: "Amlodipine Besilate 10mg Tablet", pack: "100's", prezzo: 1120.00, maxDeal: "-", arp: "1,120.00" },
-    { id: "hextan", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN", descrizione: "Losartan Potassium 50mg Film-Coated Tablet", pack: "100's", prezzo: 1454.00, maxDeal: "-", arp: "1,454.00" },
-    { id: "hextan-plus", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN PLUS", descrizione: "Losartan Potassium 50mg + HCTZ 12.5mg FCT", pack: "100's", prezzo: 1980.00, maxDeal: "5+5/10+15/15+25", arp: "1,980.00*" },
-    { id: "olmepas", categoria: "CARDIOVASCULAR PRODUCTS", nome: "OLMEPAS", descrizione: "Olmesartan Medoxomil 20mg FCT", pack: "30's", prezzo: 1208.00, maxDeal: "-", arp: "1,208.00" },
-    { id: "plavihex", categoria: "CARDIOVASCULAR PRODUCTS", nome: "PLAVIHEX*", descrizione: "Clopidogrel 75mg Tablet", pack: "100's", prezzo: 3176.00, maxDeal: "-", arp: "3,176.00" },
-    { id: "colixtan", categoria: "CARDIOVASCULAR PRODUCTS", nome: "COLIXTAN", descrizione: "Losartan Potassium + Amlodipine Besilate 50mg/5mg FCT", pack: "100's", prezzo: 1725.00, maxDeal: "8+1", arp: "1,725.00" },
-    { id: "ardilol", categoria: "CARDIOVASCULAR PRODUCTS", nome: "ARDILOL", descrizione: "Carvedilol 6.25mg Tablet", pack: "30's", prezzo: 345.00, maxDeal: "-", arp: "345.00" },
-    { id: "truvast", categoria: "CARDIOVASCULAR PRODUCTS", nome: "TRUVAST", descrizione: "Atorvastatin Calcium 20mg Film-Coated Tablet", pack: "100's", prezzo: 2915.00, maxDeal: "-", arp: "2,915.00" },
-    { id: "stravas", categoria: "CARDIOVASCULAR PRODUCTS", nome: "STRAVAS", descrizione: "Rosuvastatin Calcium 10mg Film-Coated Tablet", pack: "30's", prezzo: 863.00, maxDeal: "5+5/10+15", arp: "863.00" },
-    { id: "finora", categoria: "CARDIOVASCULAR PRODUCTS", nome: "FINORA", descrizione: "Fenofibrate 200mg Capsule", pack: "100's", prezzo: 2800.00, maxDeal: "5+5/10+15/15+25", arp: "3,136.00" },
-    { id: "amtaz", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMTAZ", descrizione: "Trimetazidine HCI 35mg Modified-Release Tablet", pack: "30's", prezzo: 587.00, maxDeal: "-", arp: "657.44" },
-    { id: "ciflomed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "CIFLOMED", descrizione: "Ciprofloxacin 500mg Film-Coated Tablet", pack: "100's", prezzo: 3300.00, maxDeal: "5+5/10+20", arp: "3,696.00" },
-    { id: "dalamed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "DALAMED", descrizione: "Clindamycin 300mg Capsule", pack: "100's", prezzo: 5440.00, maxDeal: "8+1", arp: "6,092.80" },
-    { id: "klarimed", categoria: "ANTIBACTERIAL PRODUCTS", nome: "KLARIMED", descrizione: "Clarithromycin 500mg Film-Coated Tablet", pack: "30's", prezzo: 1668.00, maxDeal: "5+5/10+15", arp: "1,868.16" },
-    { id: "limoclav", categoria: "ANTIBACTERIAL PRODUCTS", nome: "LIMOCLAV", descrizione: "Co-amoxiclav 625mg FCT", pack: "21's", prezzo: 1087.00, maxDeal: "8+1", arp: "1,217.44" },
-    { id: "limoxil", categoria: "ANTIBACTERIAL PRODUCTS", nome: "LIMOXIL", descrizione: "Amoxicillin Trihydrate 500mg Capsule", pack: "100's", prezzo: 1150.00, maxDeal: "N/A", arp: "1,288.00" },
-    { id: "trufix", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRUFIX", descrizione: "Cefixime Trihydrate 200mg Capsule", pack: "10's", prezzo: 1265.00, maxDeal: "8+1", arp: "1,416.80" },
-    { id: "trulev", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRULEV", descrizione: "Levofloxacin 500mg Film-Coated Tablet", pack: "30's", prezzo: 1733.00, maxDeal: "5+5/10+20", arp: "1,940.96" },
-    { id: "truxim", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRUXIM", descrizione: "Cefuroxime Axetil 500mg Film-Coated Tablet", pack: "10's", prezzo: 690.00, maxDeal: "No FG", arp: "772.80" },
-    { id: "rozenta-susp", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA Susp", descrizione: "Azithromycin 200mg/5ml Powder for Oral suspension", pack: "1's", prezzo: 403.00, maxDeal: "No FG", arp: "451.36" },
-    { id: "rozenta-tab", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA Tab", descrizione: "Azithromycin 500mg Film-coated Tablet", pack: "30's", prezzo: 2640.00, maxDeal: "-", arp: "2,956.80" },
-    { id: "amrid", categoria: "ANTIBACTERIAL PRODUCTS", nome: "AMRID", descrizione: "Metronidazole 500mg Tablet", pack: "100's", prezzo: 1150.00, maxDeal: "8+1", arp: "1,288.00" },
-    { id: "procin", categoria: "ANTIBACTERIAL PRODUCTS", nome: "PROCIN", descrizione: "Mupirocin 20mg/g (2% w/w) Ointment, 5G/tube", pack: "1's", prezzo: 173.00, maxDeal: "-", arp: "193.76" },
-    { id: "solbina", categoria: "TOPICAL CORTICOSTEROIDS", nome: "SOLBINA", descrizione: "Clobetasol propionate 500 mcg/g (0.05% w/w) Topical Cream, 10G/tube", pack: "1's", prezzo: 345.00, maxDeal: "8+1", arp: "386.40" },
-    { id: "glimep", categoria: "METABOLIC PRODUCT", nome: "GLIMEP", descrizione: "Glimepiride 2mg Tablet", pack: "100's", prezzo: 1127.00, maxDeal: "8+1", arp: "1,127.00" },
-    { id: "sazol", categoria: "PROTON PUMP INHIBITORS", nome: "SAZOL", descrizione: "Esomeprazole 40mg Delayed Release Tablet", pack: "30's", prezzo: 1800.00, maxDeal: "-", arp: "2,016.00" },
-    { id: "nexopraz-40", categoria: "PROTON PUMP INHIBITORS", nome: "NEXOPRAZ 40", descrizione: "Esomeprazole 40mg Enteric Coated Tablet", pack: "100's", prezzo: 6050.00, maxDeal: "8+1", arp: "6,776.00" },
-    { id: "trumeprazole", categoria: "PROTON PUMP INHIBITORS", nome: "TRUMEPRAZOLE", descrizione: "Omeprazole 20mg Delayed Release Capsule", pack: "100's", prezzo: 3630.00, maxDeal: "-", arp: "4,065.60" },
-    { id: "levorin", categoria: "ANTI-HISTAMINE", nome: "LEVORIN", descrizione: "Levocetirizine Dihydrochloride 5mg FCT", pack: "30's", prezzo: 1100.00, maxDeal: "8+1", arp: "1,232.00" },
-    { id: "sinuzerc", categoria: "ANTI-HISTAMINE", nome: "SINUZERC", descrizione: "Loratadine 10mg Tablet", pack: "100's", prezzo: 1500.00, maxDeal: "-", arp: "1,680.00" },
-    { id: "xytozen", categoria: "ANTI-HISTAMINE", nome: "XYTOZEN", descrizione: "Montelukast 10mg + Levocetirizine Hydrochloride 5mg Film-coated Tablet", pack: "30's", prezzo: 1035.00, maxDeal: "-", arp: "1,159.20" },
-    { id: "verahit", categoria: "ANTI-VERTIGO", nome: "VERAHIT", descrizione: "Betahistine Hydrochloride 16mg tablet", pack: "100's", prezzo: 2300.00, maxDeal: "8+1", arp: "2,576.00" },
-    { id: "monlastik", categoria: "LEUKOTRIENE RECEPTOR ANTAGONIST", nome: "MONLASTIK", descrizione: "Montelukast 10mg Film-coated Tablet", pack: "100's", prezzo: 3300.00, maxDeal: "8+1", arp: "3,696.00" },
-    { id: "trucox", categoria: "ANALGESIC", nome: "TRUCOX", descrizione: "Celecoxib 200mg Capsule", pack: "30's", prezzo: 1012.00, maxDeal: "-", arp: "1,133.44" },
-    { id: "memaray", categoria: "ANALGESIC", nome: "MEMARAY", descrizione: "Mefenamic Acid 500mg Capsule", pack: "100's", prezzo: 1265.00, maxDeal: "8+1", arp: "1,416.80" },
-    { id: "lotram-plus", categoria: "ANALGESIC", nome: "LOTRAM PLUS", descrizione: "Tramadol 37.5mg + Paracetamol 325 mg FCT", pack: "100's", prezzo: 3000.00, maxDeal: "8+1", arp: "3,360.00" },
-    { id: "lotram", categoria: "ANALGESIC", nome: "LOTRAM", descrizione: "Tramadol Hydrochloride 50mg FCT", pack: "100's", prezzo: 1150.00, maxDeal: "8+1", arp: "1,288.00" },
-    { id: "colimax", categoria: "CHOLELITHOLYTIC & HEPATIC PROTECTOR", nome: "COLIMAX", descrizione: "Ursodeoxycholic Acid 300mg FCT", pack: "100's", prezzo: 4500.00, maxDeal: "8+1", arp: "5,040.00" },
-    { id: "acugout", categoria: "ANTI-GOUT", nome: "ACUGOUT", descrizione: "Colchicine 500mcg Tablet", pack: "100's", prezzo: 518.00, maxDeal: "-", arp: "580.16" },
-    { id: "xozid", categoria: "ANTI-GOUT", nome: "XOZID", descrizione: "Febuxostat 40mg FCT", pack: "30's", prezzo: 794.00, maxDeal: "8+1", arp: "889.28" },
-    { id: "convuliz", categoria: "ANTI-EPILEPTIC / DIABETIC NEUROPATHY", nome: "CONVULIZ", descrizione: "Pregabalin 75mg Capsule", pack: "28's", prezzo: 1030.00, maxDeal: "8+1", arp: "1,030.40" },
-    { id: "folmaterna", categoria: "ANTI-ANEMIA PRESCRIPTION DRUG", nome: "FOLMATERNA", descrizione: "Folic Acid 5mg Capsule", pack: "100's", prezzo: 920.00, maxDeal: "8+1", arp: "1,030.40" },
-    { id: "prostulax", categoria: "ALPHA-1 ADRENORECEPTOR ANTAGONIST", nome: "PROSTULAX", descrizione: "Tamsulosin Hydrochloride 400mcg Prolonged Release Tablet", pack: "30's", prezzo: 1380.00, maxDeal: "8+1", arp: "1,545.60" },
-    { id: "iromax-plus", categoria: "NUTRITIONALS", nome: "IROMAX PLUS", descrizione: "Ferrous Ascorbate, L-Methyl Folate, Vitamins & Minerals FCT", pack: "30's", prezzo: 600.00, maxDeal: "-", arp: "672.00" },
-    { id: "gutzorb", categoria: "NUTRITIONALS", nome: "GUTZORB", descrizione: "Probiotics + Gastric Enzymes Capsule", pack: "100's", prezzo: 4500.00, maxDeal: "-", arp: "5,040.00" },
-    { id: "livoplex", categoria: "NUTRITIONALS", nome: "LIVOPLEX", descrizione: "Silymarin 150mg + Vit B1, B6, B12 Capsule", pack: "30's", prezzo: 518.00, maxDeal: "10+1", arp: "580.16" },
-    { id: "senphos", categoria: "NUTRITIONALS", nome: "SENPHOS", descrizione: "Essential Phospholipids 300mg + Vit. B & E capsule", pack: "50's", prezzo: 1495.00, maxDeal: "-", arp: "1,674.40" },
-    { id: "menacal", categoria: "NUTRITIONALS", nome: "MENACAL", descrizione: "Calcium Citrate + Vit. K2-7 with Mg, Zn, and Vit D3 1.5G FCT", pack: "90's", prezzo: 1035.00, maxDeal: "-", arp: "1,159.20" },
-    { id: "morfera", categoria: "NUTRITIONALS", nome: "MORFERA", descrizione: "Moringa Oleifera 500mg Capsule", pack: "100's", prezzo: 719.00, maxDeal: "-", arp: "805.28" },
-    { id: "momma-vit", categoria: "NUTRITIONALS", nome: "MOMMA VIT", descrizione: "Pre & Post Natal Vitamins with Folic Acid, Taurine, DHA & EPA Softgel", pack: "30's", prezzo: 760.00, maxDeal: "No FG", arp: "851.20" },
-    { id: "powergold", categoria: "NUTRITIONALS", nome: "POWERGOLD", descrizione: "Multivitamins & Minerals with Ginseng, Deanol & Rutin Softgel", pack: "30's", prezzo: 700.00, maxDeal: "-", arp: "784.00" },
-    { id: "sleepeasy", categoria: "NUTRITIONALS", nome: "SLEEPEASY", descrizione: "Melatonin 3mg Softgel", pack: "30's", prezzo: 690.00, maxDeal: "-", arp: "772.80" },
-    { id: "sleepeasy-plus", categoria: "NUTRITIONALS", nome: "SLEEPEASY PLUS", descrizione: "Lactium Casein Hydrolysate 75mg L-theanine 125mg Melatonin 3mg Tablet", pack: "30's", prezzo: 900.00, maxDeal: "10+1", arp: "1,008.00" },
-    { id: "truceevit", categoria: "NUTRITIONALS", nome: "TRUCEEVIT", descrizione: "Ascorbic Acid (as Sodium Ascorbate) 500mg Capsule", pack: "100's", prezzo: 690.00, maxDeal: "-", arp: "772.80" },
-    { id: "lubruoint-od", categoria: "NUTRITIONALS", nome: "LUBRUOINT OD", descrizione: "Glucosamine 1500 mg Film-coated Tablet", pack: "30's", prezzo: 1500.00, maxDeal: "-", arp: "1,680.00" },
-    { id: "peatide", categoria: "NUTRITIONALS", nome: "PEATIDE", descrizione: "Palmitic Acid Monoethanolamide 150mg, Cytidine 15mg, Uridine 9mg, Folic Acid 176mcg and Cyanocobalamin 2.2mcg Capsule", pack: "30's", prezzo: 1200.00, maxDeal: "-", arp: "1,344.00" }
+// Dati completi del catalogo (57 prodotti - colonna USA rimossa)
+const prodottiData = [
+  { id: "amlix-1", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX", descrizione: "5mg Amlodipine Besilate 5mg Tablet", pack: "100's", prezzo: 825.0, maxDeal: "-", arp: "825.00" },
+  { id: "amlix-2", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX", descrizione: "10mg Amlodipine Besilate 10mg Tablet", pack: "100's", prezzo: 1120.0, maxDeal: "-", arp: "1,120.00" },
+  { id: "hextan-3", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN", descrizione: "Losartan Potassium 50mg Film-Coated Tablet", pack: "100's", prezzo: 1454.0, maxDeal: "-", arp: "1,454.00" },
+  { id: "hextan-4", categoria: "CARDIOVASCULAR PRODUCTS", nome: "HEXTAN", descrizione: "PLUS Losartan Potassium 50mg + HCTZ 12.5mg FCT", pack: "100's", prezzo: 1980.0, maxDeal: "5+5/ 10+15/", arp: "1,980.00" },
+  { id: "olmepas-5", categoria: "CARDIOVASCULAR PRODUCTS", nome: "OLMEPAS", descrizione: "Olmesartan Medoxomil 20mg FCT", pack: "30's", prezzo: 1208.0, maxDeal: "15+25", arp: "1,208.00" },
+  { id: "plavihex-6", categoria: "CARDIOVASCULAR PRODUCTS", nome: "PLAVIHEX", descrizione: "Clopidogrel 75mg Tablet", pack: "100's", prezzo: 3176.0, maxDeal: "8+1", arp: "3,176.00" },
+  { id: "colixtan-7", categoria: "CARDIOVASCULAR PRODUCTS", nome: "COLIXTAN", descrizione: "Losartan Potassium + Amlodipine Besilate 50mg/5mg FCT", pack: "100's", prezzo: 1725.0, maxDeal: "-", arp: "1,725.00" },
+  { id: "ardilol-8", categoria: "CARDIOVASCULAR PRODUCTS", nome: "ARDILOL", descrizione: "Carvedilol mg Tablet", pack: "30's", prezzo: 6.25, maxDeal: "-", arp: "345.00" },
+  { id: "truvast-9", categoria: "CARDIOVASCULAR PRODUCTS", nome: "TRUVAST", descrizione: "Atorvastatin Calcium 20mg Film-Coated Tablet", pack: "100's", prezzo: 2915.0, maxDeal: "-", arp: "2,915.00" },
+  { id: "stravas-10", categoria: "CARDIOVASCULAR PRODUCTS", nome: "STRAVAS", descrizione: "Rosuvastatin Calcium 10mg Film-Coated Tablet 5+5/ 10+15", pack: "30's", prezzo: 863.0, maxDeal: "-", arp: "863.00" },
+  { id: "finora-11", categoria: "CARDIOVASCULAR PRODUCTS", nome: "FINORA", descrizione: "Fenofibrate 200mg Capsule", pack: "100's", prezzo: 2800.0, maxDeal: "5+5/ 10+15 / 15+25", arp: "3,136.00" },
+  { id: "amtaz-12", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMTAZ", descrizione: "Trimetazidine HCl 35mg Modified-Release Tablet", pack: "30's", prezzo: 587.0, maxDeal: "-", arp: "657.44" },
+  { id: "ciflomed-13", categoria: "ANTIBACTERIAL PRODUCTS", nome: "CIFLOMED", descrizione: "Ciprofloxacin 500mg Film-Coated Tablet 5+5/ 10+20", pack: "100's", prezzo: 3300.0, maxDeal: "8+1", arp: "3,696.00" },
+  { id: "dalamed-14", categoria: "ANTIBACTERIAL PRODUCTS", nome: "DALAMED", descrizione: "Clindamycin 300mg Capsule 5+5/ 10+15 / 15+25", pack: "100's", prezzo: 5440.0, maxDeal: "-", arp: "6,092.80" },
+  { id: "klarimed-15", categoria: "ANTIBACTERIAL PRODUCTS", nome: "KLARIMED", descrizione: "Clarithromycin 500mg Film-Coated Tablet 5+5/ 10+15 No FG", pack: "30's", prezzo: 1668.0, maxDeal: "-", arp: "1,868.16" },
+  { id: "limoclav-16", categoria: "ANTIBACTERIAL PRODUCTS", nome: "LIMOCLAV", descrizione: "Co-amoxiclav 625mg FCT 8+1", pack: "21's", prezzo: 1087.0, maxDeal: "-", arp: "1,217.44" },
+  { id: "limoxil-17", categoria: "ANTIBACTERIAL PRODUCTS", nome: "LIMOXIL", descrizione: "Amoxicillin Tridhydrate 500mg Capsule 5+5/ 10+15 / 15+25 N/A", pack: "100's", prezzo: 1150.0, maxDeal: "-", arp: "1,288.00" },
+  { id: "trufix-18", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRUFIX", descrizione: "Cefixime Trihydrate 200mg Capsule", pack: "10's", prezzo: 1265.0, maxDeal: "8+1", arp: "1,416.80" },
+  { id: "trulev-19", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRULEV", descrizione: "Levofloxacin 500mg Film-Coated Tablet 5+5/ 10+20", pack: "30's", prezzo: 1733.0, maxDeal: "-", arp: "1,940.96" },
+  { id: "truxim-20", categoria: "ANTIBACTERIAL PRODUCTS", nome: "TRUXIM", descrizione: "Cefuroxime Axetil 500mg Film-Coated Tablet 5+2/ 10+5 No FG", pack: "10's", prezzo: 690.0, maxDeal: "-", arp: "772.80" },
+  { id: "rozenta-21", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA", descrizione: "Susp Azithromycin 200mg/5ml Powder for Oral suspension No FG", pack: "1's", prezzo: 403.0, maxDeal: "-", arp: "451.36" },
+  { id: "rozenta-22", categoria: "ANTIBACTERIAL PRODUCTS", nome: "ROZENTA", descrizione: "Tab Azithromycin 500mg Film-coated Tablet 5+5 / 10+15 / 15+25", pack: "30's", prezzo: 2640.0, maxDeal: "-", arp: "2,956.80" },
+  { id: "amrid-23", categoria: "ANTIBACTERIAL PRODUCTS", nome: "AMRID", descrizione: "Metronidazole 500mg Tablet 8+1", pack: "100's", prezzo: 1150.0, maxDeal: "-", arp: "1,288.00" },
+  { id: "procin-24", categoria: "ANTIBACTERIAL PRODUCTS", nome: "PROCIN", descrizione: "Mupirocin 20mg/g (2% w/w) Ointment, 5G/tube 5+2/ 10+5", pack: "1's", prezzo: 173.0, maxDeal: "-", arp: "193.76" },
+  { id: "solbina-25", categoria: "TOPICAL CORTICOSTEROIDS", nome: "SOLBINA", descrizione: "Clobetasol priopionate 500 mcg / g Topical Cream, 10G/tube 5+2/ 10+15 / 15+25 8+1", pack: "1's", prezzo: 345.0, maxDeal: "8+1", arp: "386.40" },
+  { id: "glimep-26", categoria: "METABOLIC PRODUCT", nome: "GLIMEP", descrizione: "Glimepiride 2mg Tablet 5+5/ 10+15 / 15+25 8+1", pack: "100's", prezzo: 1127.0, maxDeal: "-", arp: "1,127.00" },
+  { id: "sazol-27", categoria: "PROTON PUMP INHIBITORS", nome: "SAZOL", descrizione: "Esomeprazole 40mg Delayed ReleaseTablet 5+5/ 10+15 / 15+25", pack: "30'S", prezzo: 1800.0, maxDeal: "-", arp: "2,016.00" },
+  { id: "nexopraz-28", categoria: "PROTON PUMP INHIBITORS", nome: "NEXOPRAZ", descrizione: "40 Esomeprazole 40mg Enteric Coated Tablet 5+5 8+1", pack: "100's", prezzo: 6050.0, maxDeal: "-", arp: "6,776.00" },
+  { id: "trumeprazole-29", categoria: "PROTON PUMP INHIBITORS", nome: "TRUMEPRAZOLE", descrizione: "Omeprazole 20mg Delayed Release Capsule 5+5/ 10+15 / 15+25", pack: "100's", prezzo: 3630.0, maxDeal: "-", arp: "4,065.60" },
+  { id: "levorin-30", categoria: "ANTI-HISTAMINE", nome: "LEVORIN", descrizione: "Levocetirizine Dihydrochloride 5mg FCT", pack: "30's", prezzo: 1100.0, maxDeal: "-", arp: "1,232.00" },
+  { id: "sinuzerc-31", categoria: "ANTI-HISTAMINE", nome: "SINUZERC", descrizione: "Loratadine 10mg Tablet 5+5/ 10+15 / 15+25 8+1", pack: "100's", prezzo: 1500.0, maxDeal: "-", arp: "1,680.00" },
+  { id: "xytozen-32", categoria: "ANTI-HISTAMINE", nome: "XYTOZEN", descrizione: "Montelukast 10mg + Levocetirizine Hydrochloride 5mg Film-coated Tablet", pack: "30's", prezzo: 1035.0, maxDeal: "-", arp: "1,159.20" },
+  { id: "verahit-33", categoria: "ANTI-VERTIGO", nome: "VERAHIT", descrizione: "Betahistine Hydrochloride 16mg tablet 5+5/ 10+15/ 15+25 8+1", pack: "100's", prezzo: 2300.0, maxDeal: "-", arp: "2,576.00" },
+  { id: "monlastik-34", categoria: "LEUKOTRIENE RECEPTOR ANTAGONIST", nome: "MONLASTIK", descrizione: "Montelukast 10mg Film-coated Tablet 5+5/ 10+15/ 15+25 8+1", pack: "100's", prezzo: 3300.0, maxDeal: "-", arp: "3,696.00" },
+  { id: "trucox-35", categoria: "NSAID", nome: "TRUCOX", descrizione: "Celecoxib 200mg Capsule 5+5/10+15", pack: "30's", prezzo: 1012.0, maxDeal: "8+1", arp: "1,133.44" },
+  { id: "memaray-36", categoria: "NSAID", nome: "MEMARAY", descrizione: "Mefenamic Acid 500mg Capsule 5+5/ 10+15 / 15+25", pack: "100's", prezzo: 1265.0, maxDeal: "-", arp: "1,416.80" },
+  { id: "lotram-37", categoria: "ANALGESIC", nome: "LOTRAM", descrizione: "PLUS Tramadol 37.5mg + Paracetamol 325 mg FCT", pack: "100's", prezzo: 3000.0, maxDeal: "5+5/ 10+15/ 15+25            8+1", arp: "3,360.00" },
+  { id: "lotram-38", categoria: "ANALGESIC", nome: "LOTRAM", descrizione: "Tramadol Hydrochloride 50mg FCT", pack: "100's", prezzo: 1150.0, maxDeal: "-", arp: "1,288.00" },
+  { id: "colimax-39", categoria: "CHOLELITHOLYTIC & HEPATIC PROTECTOR (BILE SALT)", nome: "COLIMAX", descrizione: "Ursodeoxycholic Acid 300mg FCT 5+5/ 10+15/ 15+20 8+1", pack: "100's", prezzo: 4500.0, maxDeal: "-", arp: "5,040.00" },
+  { id: "acugout-40", categoria: "ANTI-GOUT", nome: "ACUGOUT", descrizione: "Colchicine 500mcg Tablet 5+2 / 10+5", pack: "100's", prezzo: 518.0, maxDeal: "8+1", arp: "580.16" },
+  { id: "xozid-41", categoria: "ANTI-GOUT", nome: "XOZID", descrizione: "Febuxostat 40mg FCT 5+5/ 10+15/ 15+25", pack: "30's", prezzo: 794.0, maxDeal: "-", arp: "889.28" },
+  { id: "convuliz-42", categoria: "ANTI-EPILEPTIC / DIABETIC NEUROPATHY", nome: "CONVULIZ", descrizione: "Pregabalin 75mg Capsule 5+5/ 10+15/ 15+25 8+1", pack: "28's", prezzo: 1030.0, maxDeal: "8+1", arp: "1,030.40" },
+  { id: "folmaterna-43", categoria: "ANTI-ANEMIA PRESCRIPTION DRUG", nome: "FOLMATERNA", descrizione: "Folic Acid 5mg Capsule 5+1 /10+3 /25+25 8+1", pack: "100's", prezzo: 920.0, maxDeal: "-", arp: "1,030.40" },
+  { id: "prostulax-44", categoria: "ALPHA-1 ADRENORECEPTOR ANTAGONIST", nome: "PROSTULAX", descrizione: "Tamsulosin Hydrocholoride 400mcg Proloned Release Tablet 5+5 / 10+15 / 15+25 8+1", pack: "30's", prezzo: 1380.0, maxDeal: "-", arp: "1,545.60" },
+  { id: "iromax-45", categoria: "NUTRITIONALS", nome: "IROMAX", descrizione: "PLUS Ferrous Ascorbate, L-Methyl Folate, Vitamins & Minerals FCT 5+1 /10+3 / 25+15", pack: "30'S", prezzo: 600.0, maxDeal: "-", arp: "672.00" },
+  { id: "gutzorb-46", categoria: "NUTRITIONALS", nome: "GUTZORB", descrizione: "Probiotics + Gastric Enzymes Capsule", pack: "100's", prezzo: 4500.0, maxDeal: "-", arp: "5,040.00" },
+  { id: "livoplex-47", categoria: "NUTRITIONALS", nome: "LIVOPLEX", descrizione: "Silymarin 150mg + Vit B1, B6, B12 Capsule", pack: "30'S", prezzo: 518.0, maxDeal: "10+1", arp: "580.16" },
+  { id: "senphos-48", categoria: "NUTRITIONALS", nome: "SENPHOS", descrizione: "Essential Phospholipids 300mg + Vit. B & E capsule 5+1 /10+3 / 25+25", pack: "50's", prezzo: 1495.0, maxDeal: "-", arp: "1,674.40" },
+  { id: "menacal-49", categoria: "NUTRITIONALS", nome: "MENACAL", descrizione: "Calcium Citrate + Vit K2-7 with Mg, Zn, and Vit D3 1.5G FCT", pack: "90'S", prezzo: 1035.0, maxDeal: "-", arp: "1,159.20" },
+  { id: "morfera-50", categoria: "NUTRITIONALS", nome: "MORFERA", descrizione: "Moringa Oleifera 500mg Capsule", pack: "100's", prezzo: 719.0, maxDeal: "-", arp: "805.28" },
+  { id: "momma-51", categoria: "NUTRITIONALS", nome: "MOMMA", descrizione: "VIT Pre & Post Natal Vitamins with Folic Acid, Taurine, DHA & EPA Softgel No FG", pack: "30'S", prezzo: 760.0, maxDeal: "5+1 /10+3 / 25+15", arp: "851.20" },
+  { id: "powergold-52", categoria: "NUTRITIONALS", nome: "POWERGOLD", descrizione: "Multivitamins & Minerals with Ginseng, Deanol & Rutin Softgel", pack: "30's", prezzo: 700.0, maxDeal: "-", arp: "784.00" },
+  { id: "sleepeasy-53", categoria: "NUTRITIONALS", nome: "SLEEPEASY", descrizione: "Melatonin 3mg Softgel", pack: "30's", prezzo: 690.0, maxDeal: "-", arp: "772.80" },
+  { id: "sleepeasy-54", categoria: "NUTRITIONALS", nome: "SLEEPEASY", descrizione: "PLUS Lactium Casein Hydrolysate 75mg L-theanine 125mg Melatonin 3mg Tablet", pack: "30's", prezzo: 900.0, maxDeal: "5+1 /10+3 / 25+25", arp: "1,008.00" },
+  { id: "truceevit-55", categoria: "NUTRITIONALS", nome: "TRUCEEVIT", descrizione: "Ascorbic Acid (as Sodium Ascorbate) 500mg Capsule 10+1", pack: "100's", prezzo: 690.0, maxDeal: "-", arp: "772.80" },
+  { id: "lubrijoint-56", categoria: "NUTRITIONALS", nome: "LUBRIJOINT", descrizione: "OD Glucosamine 1500 mg Film-coated Tablet Palmitic Acid Monoethanolamide", pack: "30's", prezzo: 1500.0, maxDeal: "-", arp: "1,680.00" },
+  { id: "peatide-57", categoria: "NUTRITIONALS", nome: "PEATIDE", descrizione: "Palmitic Acid Monoethanolamide 150mg, Cytidine 15mg, Uridine 9mg", pack: "30's", prezzo: 1200.0, maxDeal: "-", arp: "1,344.00" }
 ];
 
 let catalogData = [];
@@ -74,9 +75,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const inputData = document.getElementById('ordineData');
     if (inputData) inputData.value = dataOggi;
 
-    await caricaTargetDalBackend();
-    await caricaCatalogoDaFirestore();
-    caricaOrdiniSalvati();
+    // Esegue tutte le chiamate a Firebase in parallelo invece che una alla volta
+    await Promise.all([
+        caricaTargetDalBackend(),
+        caricaCatalogoDaFirestore(),
+        caricaOrdiniSalvati()
+    ]);
+    
     setupStickyWidgetObserver();
 });
 
@@ -130,30 +135,59 @@ window.cambiaTargetStep = function(delta) {
     window.aggiornaTargetAnnuale(nuovoValore);
 };
 
+function popolaSelectCategorie() {
+    const selectEl = document.getElementById('nuovaCategoria');
+    if (!selectEl) return;
+
+    const categorieUniche = [...new Set(catalogData.map(item => item.categoria))].sort();
+
+    selectEl.innerHTML = '';
+    categorieUniche.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        selectEl.appendChild(option);
+    });
+}
+
+// Sincronizzazione ad altissima velocità: legge il catalogo senza sovrascrivere 57 volte a ogni avvio
 async function caricaCatalogoDaFirestore() {
     try {
+        console.log("Caricamento rapido del catalogo da Firestore...");
+        
         const querySnapshot = await getDocs(collection(db, "catalogo"));
+        
         if (querySnapshot.empty) {
-            for (const item of catalogoIniziale) {
+            console.log("Database vuoto: popolamento iniziale...");
+            for (const item of prodottiData) {
                 await setDoc(doc(db, "catalogo", item.id), item);
             }
-            catalogData = [...catalogoIniziale];
+            const snapshotIniziale = await getDocs(collection(db, "catalogo"));
+            catalogData = [];
+            snapshotIniziale.forEach((docSnap) => {
+                catalogData.push({ id: docSnap.id, ...docSnap.data() });
+            });
         } else {
             catalogData = [];
             querySnapshot.forEach((docSnap) => {
                 catalogData.push({ id: docSnap.id, ...docSnap.data() });
             });
         }
+
+        console.log(`Catalogo pronto! Totale prodotti attivi: ${catalogData.length}`);
         renderizzaCatalogo();
+        popolaSelectCategorie();
         ricalcolaTotale();
     } catch (error) {
-        console.error("Errore caricamento catalogo da Firestore:", error);
-        catalogData = [...catalogoIniziale];
+        console.error("Errore durante il caricamento del catalogo:", error);
+        catalogData = [...prodottiData];
         renderizzaCatalogo();
+        popolaSelectCategorie();
         ricalcolaTotale();
     }
 }
 
+// Rendering Lazy Ultra-veloce
 window.renderizzaCatalogo = function() {
     const container = document.getElementById('categorieContainer');
     if (!container) return;
@@ -167,44 +201,70 @@ window.renderizzaCatalogo = function() {
         categorieMap[item.categoria].push(item);
     });
 
-    for (const [catNome, prodotti] of Object.entries(categorieMap)) {
-        const categoriaDiv = document.createElement('div');
-        categoriaDiv.className = 'border border-slate-200/80 rounded-xl overflow-hidden bg-white shadow-2xs';
-        
-        let prodottiHtml = '';
-        prodotti.forEach(p => {
-            const quantitaCorrente = p.quantita || 0;
-            prodottiHtml += `
-                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
-                    <td class="px-3 py-2.5 font-medium text-slate-900">
-                        ${p.nome}
-                        <div class="text-[10px] text-slate-400 font-normal">${p.descrizione}</div>
-                    </td>
-                    <td class="px-2 py-2.5 text-slate-600 text-center">${p.pack}</td>
-                    <td class="px-2 py-2.5 text-slate-700 font-semibold text-right">₱${Number(p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td class="px-2 py-2.5 text-slate-500 text-center font-mono text-[11px]">${p.maxDeal || '-'}</td>
-                    <td class="px-2 py-2.5 text-slate-700 text-center font-medium">₱${p.arp || '-'}</td>
-                    <td class="px-2 py-2.5 text-center">
-                        <div class="flex items-center justify-center gap-1">
-                            <button type="button" onclick="cambiaQuantita('${p.id}', -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center justify-center transition-colors text-sm select-none">-</button>
-                            <input type="number" id="qty_${p.id}" min="0" value="${quantitaCorrente}" onchange="aggiornaQuantitaDaInput('${p.id}', this.value)" 
-                                class="w-12 text-center border border-slate-200 rounded-lg py-1 px-1 focus:outline-none focus:border-slate-500 font-medium text-xs">
-                            <button type="button" onclick="cambiaQuantita('${p.id}', 1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center justify-center transition-colors text-sm select-none">+</button>
-                        </div>
-                    </td>
-                    <td id="subtotal-${p.id}" class="px-3 py-2.5 text-right font-semibold text-slate-900">
-                        ₱${(quantitaCorrente * p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}
-                    </td>
-                </tr>
-            `;
-        });
+    const categorieOrdinate = Object.keys(categorieMap).sort();
 
+    categorieOrdinate.forEach(catNome => {
+        const prodotti = categorieMap[catNome];
+        const categoriaDiv = document.createElement('div');
+        categoriaDiv.className = 'border border-slate-200/80 rounded-xl overflow-hidden bg-white shadow-2xs mb-3';
+        categoriaDiv.dataset.categoria = catNome;
+        
         categoriaDiv.innerHTML = `
-            <div class="bg-slate-100 px-4 py-2.5 font-semibold text-xs text-slate-700 uppercase tracking-wider border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleCategoria(this)">
+            <div class="bg-slate-100 px-4 py-2.5 font-semibold text-xs text-slate-700 uppercase tracking-wider border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleCategoriaOptimized(this, '${catNome.replace(/'/g, "\\'")}')">
                 <span>📂 ${catNome} (${prodotti.length})</span>
-                <span class="text-[10px] text-slate-500">▼</span>
+                <span class="text-[10px] text-slate-500">▶</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto cat-content" style="display: none;"></div>
+        `;
+        container.appendChild(categoriaDiv);
+    });
+}
+
+// Generazione dinamica della tabella solo all'espansione
+window.toggleCategoriaOptimized = function(headerEl, catNome) {
+    const contentDiv = headerEl.nextElementSibling;
+    const icona = headerEl.querySelector('span:last-child');
+    
+    if (contentDiv.style.display === 'none') {
+        if (!contentDiv.innerHTML.trim()) {
+            const prodotti = catalogData.filter(p => p.categoria === catNome);
+            let prodottiHtml = '';
+            
+            prodotti.forEach(p => {
+                const quantitaCorrente = p.quantita || 0;
+                prodottiHtml += `
+                    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
+                        <td class="px-3 py-2.5 font-medium text-slate-900">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    ${p.nome}
+                                    <div class="text-[10px] text-slate-400 font-normal">${p.descrizione || ''}</div>
+                                </div>
+                                <div id="delete-container-${p.id}" class="ml-2">
+                                    <button type="button" onclick="avviaEliminazioneProdotto('${p.id}')" title="Delete product" class="text-slate-300 hover:text-rose-600 font-bold px-1.5 py-0.5 rounded transition-colors">✕</button>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-2 py-2.5 text-slate-600 text-center">${p.pack}</td>
+                        <td class="px-2 py-2.5 text-slate-700 font-semibold text-right">₱${Number(p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="px-2 py-2.5 text-slate-500 text-center font-mono text-[11px]">${p.maxDeal || '-'}</td>
+                        <td class="px-2 py-2.5 text-slate-700 text-center font-medium">₱${p.arp || '-'}</td>
+                        <td class="px-2 py-2.5 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button type="button" onclick="cambiaQuantita('${p.id}', -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center justify-center transition-colors text-sm select-none">-</button>
+                                <input type="number" id="qty_${p.id}" min="0" value="${quantitaCorrente}" onchange="aggiornaQuantitaDaInput('${p.id}', this.value)" 
+                                    class="w-12 text-center border border-slate-200 rounded-lg py-1 px-1 focus:outline-none focus:border-slate-500 font-medium text-xs">
+                                <button type="button" onclick="cambiaQuantita('${p.id}', 1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg flex items-center justify-center transition-colors text-sm select-none">+</button>
+                            </div>
+                        </td>
+                        <td id="subtotal-${p.id}" class="px-3 py-2.5 text-right font-semibold text-slate-900">
+                            ₱${(quantitaCorrente * p.prezzo).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            contentDiv.innerHTML = `
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50/50 text-[11px] text-slate-400 uppercase tracking-wider">
@@ -221,28 +281,35 @@ window.renderizzaCatalogo = function() {
                         ${prodottiHtml}
                     </tbody>
                 </table>
-            </div>
-        `;
-        container.appendChild(categoriaDiv);
-    }
-}
-
-window.toggleCategoria = function(headerEl) {
-    const tableContainer = headerEl.nextElementSibling;
-    if (tableContainer.style.display === 'none') {
-        tableContainer.style.display = 'block';
-        headerEl.querySelector('span:last-child').textContent = '▼';
+            `;
+        }
+        contentDiv.style.display = 'block';
+        icona.textContent = '▼';
     } else {
-        tableContainer.style.display = 'none';
-        headerEl.querySelector('span:last-child').textContent = '▶';
+        contentDiv.style.display = 'none';
+        icona.textContent = '▶';
     }
 }
 
 window.espandiTutto = function(apri) {
-    const containers = document.querySelectorAll('#categorieContainer > div > div:last-child');
-    const icons = document.querySelectorAll('#categorieContainer > div > div:first-child span:last-child');
-    containers.forEach(c => c.style.display = apri ? 'block' : 'none');
-    icons.forEach(i => i.textContent = apri ? '▼' : '▶');
+    const headers = document.querySelectorAll('#categorieContainer > div > div:first-child');
+    headers.forEach(h => {
+        const catNome = h.parentElement.dataset.categoria;
+        const contentDiv = h.nextElementSibling;
+        const icona = h.querySelector('span:last-child');
+        
+        if (apri) {
+            if (!contentDiv.innerHTML.trim()) {
+                window.toggleCategoriaOptimized(h, catNome);
+            } else {
+                contentDiv.style.display = 'block';
+                icona.textContent = '▼';
+            }
+        } else {
+            contentDiv.style.display = 'none';
+            icona.textContent = '▶';
+        }
+    });
 }
 
 window.cambiaQuantita = function(id, delta) {
@@ -397,6 +464,7 @@ window.azzeraQuantita = function() {
 }
 
 window.apriModalNuovoProdotto = function() {
+    popolaSelectCategorie();
     document.getElementById('modalProdotto').classList.remove('hidden');
 }
 
@@ -406,25 +474,44 @@ window.chiudiModalNuovoProdotto = function() {
 
 window.salvaNuovoProdotto = async function() {
     const categoria = document.getElementById('nuovaCategoria').value;
-    const nome = document.getElementById('nuovoNome').value.trim();
+    const nome = document.getElementById('nuovoNome').value.trim(); // Brand Name
+    const descrizione = document.getElementById('nuovaDescrizione') ? document.getElementById('nuovaDescrizione').value.trim() : nome;
     const pack = document.getElementById('nuovoPack').value.trim();
     const prezzo = parseFloat(document.getElementById('nuovoPrezzo').value);
+    const maxDeal = document.getElementById('nuovoMaxDeal') ? document.getElementById('nuovoMaxDeal').value.trim() : "-";
+    const arp = document.getElementById('nuovoArp') ? document.getElementById('nuovoArp').value.trim() : prezzo.toFixed(2);
 
     if (!nome || isNaN(prezzo)) {
-        alert("Inserisci un nome valido e un prezzo corretto.");
+        alert("Inserisci un nome brand valido e un prezzo corretto.");
         return;
     }
 
     const nuovoId = 'prod-' + Date.now();
-    const nuovoItem = { id: nuovoId, categoria, nome, descrizione: nome, pack: pack || "100's", prezzo, maxDeal: "-", arp: prezzo.toFixed(2), quantita: 0 };
+    const nuovoItem = { 
+        id: nuovoId, 
+        categoria, 
+        nome, 
+        descrizione: descrizione || nome, 
+        pack: pack || "100's", 
+        prezzo, 
+        maxDeal: maxDeal || "-", 
+        arp: arp || prezzo.toFixed(2), 
+        quantita: 0 
+    };
 
     try {
         await setDoc(doc(db, "catalogo", nuovoId), nuovoItem);
         catalogData.push(nuovoItem);
         renderizzaCatalogo();
+        popolaSelectCategorie();
         chiudiModalNuovoProdotto();
+        
+        // Pulisci i campi della modale
         document.getElementById('nuovoNome').value = '';
+        if (document.getElementById('nuovaDescrizione')) document.getElementById('nuovaDescrizione').value = '';
         document.getElementById('nuovoPrezzo').value = '';
+        if (document.getElementById('nuovoMaxDeal')) document.getElementById('nuovoMaxDeal').value = '';
+        if (document.getElementById('nuovoArp')) document.getElementById('nuovoArp').value = '';
     } catch (error) {
         console.error("Errore salvataggio nuovo prodotto su Firestore:", error);
     }
@@ -519,6 +606,7 @@ window.caricaOrdineDalBackend = async function(idOrdine) {
         }
 
         renderizzaCatalogo();
+        popolaSelectCategorie();
         ricalcolaTotale();
         window.espandiTutto(true);
 
@@ -630,3 +718,36 @@ window.esportaPDF = function() {
 
     doc.save(`Trumed_Order_${cliente.replace(/\s+/g, '_')}.pdf`);
 };
+
+window.avviaEliminazioneProdotto = function(id) {
+    const container = document.getElementById(`delete-container-${id}`);
+    if (!container) return;
+
+    container.innerHTML = `
+        <button type="button" onclick="confermaEliminazioneProdotto('${id}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded transition-colors">
+            Confirm?
+        </button>
+    `;
+
+    setTimeout(() => {
+        const currentContainer = document.getElementById(`delete-container-${id}`);
+        if (currentContainer && currentContainer.innerHTML.includes('Confirm?')) {
+            currentContainer.innerHTML = `
+                <button type="button" onclick="avviaEliminazioneProdotto('${id}')" title="Delete product" class="text-slate-300 hover:text-rose-600 font-bold px-1.5 py-0.5 rounded transition-colors">✕</button>
+            `;
+        }
+    }, 4000);
+}
+
+window.confermaEliminazioneProdotto = async function(id) {
+    try {
+        await deleteDoc(doc(db, "catalogo", id));
+        catalogData = catalogData.filter(p => p.id !== id);
+        renderizzaCatalogo();
+        popolaSelectCategorie();
+        ricalcolaTotale();
+    } catch (error) {
+        console.error("Errore durante l'eliminazione del prodotto dal cloud:", error);
+        alert("Impossibile eliminare il prodotto. Riprova.");
+    }
+}
