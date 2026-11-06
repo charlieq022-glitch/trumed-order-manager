@@ -1,5 +1,5 @@
 // ==========================================
-// TRUMED ORDER MANAGEMENT - APP.JS
+// TRUMED ORDER MANAGEMENT - APP.JS (Versione Stabile Iniziale)
 // ==========================================
 
 import { db } from "./auth.js";
@@ -7,7 +7,7 @@ import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc } from "htt
 
 let TARGET_ANNUALE = 1000000; 
 
-// Dati di fallback del catalogo (57 prodotti)
+// Dati del catalogo di fallback (57 prodotti)
 const prodottiData = [
   { id: "amlix-1", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX", descrizione: "5mg Amlodipine Besilate 5mg Tablet", pack: "100's", prezzo: 825.0, maxDeal: "-", arp: "825.00" },
   { id: "amlix-2", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX", descrizione: "10mg Amlodipine Besilate 10mg Tablet", pack: "100's", prezzo: 1120.0, maxDeal: "-", arp: "1,120.00" },
@@ -71,29 +71,14 @@ const prodottiData = [
 let catalogData = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-    try {
-        console.log("Avvio applicazione Trumed...");
-        
-        // Pulizia di vecchie cache locali residue
-        localStorage.removeItem('trumed_catalogo_cache');
+    const dataOggi = new Date().toISOString().split('T')[0];
+    const inputData = document.getElementById('ordineData');
+    if (inputData) inputData.value = dataOggi;
 
-        const dataOggi = new Date().toISOString().split('T')[0];
-        const inputData = document.getElementById('ordineData');
-        if (inputData) inputData.value = dataOggi;
-
-        // Caricamento in parallelo per massima velocita da server
-        await Promise.all([
-            caricaTargetDalBackend(),
-            caricaCatalogoDaFirestore()
-        ]);
-
-        caricaOrdiniSalvati();
-        setupStickyWidgetObserver();
-        
-    } catch (error) {
-        console.error("Errore critico durante l'avvio dell'app:", error);
-        alert("Errore di caricamento iniziale. Controlla la connessione.");
-    }
+    await caricaTargetDalBackend();
+    await caricaCatalogoDaFirestore();
+    caricaOrdiniSalvati();
+    setupStickyWidgetObserver();
 });
 
 async function caricaTargetDalBackend() {
@@ -112,7 +97,7 @@ async function caricaTargetDalBackend() {
         if (inputTarget) inputTarget.value = TARGET_ANNUALE;
 
     } catch (error) {
-        console.error("Errore caricamento target dal backend, uso default:", error);
+        console.error("Errore caricamento target dal backend:", error);
     }
 }
 
@@ -126,11 +111,8 @@ window.aggiornaTargetAnnuale = async function(valore) {
             }, { merge: true });
             ricalcolaTotale();
         } catch (error) {
-            console.error("Errore salvataggio target su cloud:", error);
+            console.error("Errore salvataggio target:", error);
         }
-    } else {
-        const inputTarget = document.getElementById('inputTargetAnnuale');
-        if (inputTarget) inputTarget.value = TARGET_ANNUALE;
     }
 };
 
@@ -161,35 +143,28 @@ function popolaSelectCategorie() {
     });
 }
 
-// ==========================================
-// CARICAMENTO DIRETTO E STABILE DA FIRESTORE
-// ==========================================
+// Caricamento originale pulito da Firestore
 async function caricaCatalogoDaFirestore() {
     try {
-        console.log("Recupero catalogo live da Firestore...");
         const querySnapshot = await getDocs(collection(db, "catalogo"));
         
         if (querySnapshot.empty) {
-            console.log("Database vuoto: popolamento iniziale...");
             for (const item of prodottiData) {
                 await setDoc(doc(db, "catalogo", item.id), item);
             }
             catalogData = [...prodottiData];
         } else {
-            const prodottiServer = [];
+            catalogData = [];
             querySnapshot.forEach((docSnap) => {
-                prodottiServer.push({ id: docSnap.id, ...docSnap.data() });
+                catalogData.push({ id: docSnap.id, ...docSnap.data() });
             });
-            catalogData = prodottiServer;
         }
 
-        console.log(`Catalogo caricato dal cloud! Totale prodotti: ${catalogData.length}`);
         renderizzaCatalogo();
         popolaSelectCategorie();
         ricalcolaTotale();
-
     } catch (error) {
-        console.error("Errore connessione Firestore, uso dati di emergenza:", error);
+        console.error("Errore caricamento catalogo:", error);
         catalogData = [...prodottiData];
         renderizzaCatalogo();
         popolaSelectCategorie();
@@ -197,7 +172,6 @@ async function caricaCatalogoDaFirestore() {
     }
 }
 
-// Rendering Lazy
 window.renderizzaCatalogo = function() {
     const container = document.getElementById('categorieContainer');
     if (!container) return;
@@ -230,7 +204,6 @@ window.renderizzaCatalogo = function() {
     });
 }
 
-// Generazione dinamica della tabella solo all'espansione
 window.toggleCategoriaOptimized = function(headerEl, catNome) {
     const contentDiv = headerEl.nextElementSibling;
     const icona = headerEl.querySelector('span:last-child');
@@ -522,7 +495,7 @@ window.salvaNuovoProdotto = async function() {
         if (document.getElementById('nuovoMaxDeal')) document.getElementById('nuovoMaxDeal').value = '';
         if (document.getElementById('nuovoArp')) document.getElementById('nuovoArp').value = '';
     } catch (error) {
-        console.error("Errore salvataggio nuovo prodotto su Firestore:", error);
+        console.error("Errore salvataggio nuovo prodotto:", error);
     }
 }
 
@@ -620,7 +593,7 @@ window.caricaOrdineDalBackend = async function(idOrdine) {
         window.espandiTutto(true);
 
     } catch (error) {
-        console.error("Errore durante il caricamento dell'ordine:", error);
+        console.error("Errore caricamento ordine:", error);
     }
 }
 
@@ -756,7 +729,7 @@ window.confermaEliminazioneProdotto = async function(id) {
         popolaSelectCategorie();
         ricalcolaTotale();
     } catch (error) {
-        console.error("Errore durante l'eliminazione del prodotto dal cloud:", error);
+        console.error("Errore eliminazione prodotto:", error);
         alert("Impossibile eliminare il prodotto. Riprova.");
     }
 }
