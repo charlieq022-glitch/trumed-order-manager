@@ -1,5 +1,5 @@
 // ==========================================
-// TRUMED ORDER MANAGEMENT - APP.JS (Versione Stabile Iniziale)
+// TRUMED ORDER MANAGEMENT - APP.JS
 // ==========================================
 
 import { db } from "./auth.js";
@@ -71,6 +71,12 @@ const prodottiData = [
 let catalogData = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        localStorage.removeItem('trumed_catalogo_cache');
+    } catch (e) {
+        console.warn("Impossibile accedere a localStorage:", e);
+    }
+
     const dataOggi = new Date().toISOString().split('T')[0];
     const inputData = document.getElementById('ordineData');
     if (inputData) inputData.value = dataOggi;
@@ -143,7 +149,7 @@ function popolaSelectCategorie() {
     });
 }
 
-// Caricamento originale pulito da Firestore
+// Caricamento pulito da Firestore
 async function caricaCatalogoDaFirestore() {
     try {
         const querySnapshot = await getDocs(collection(db, "catalogo"));
