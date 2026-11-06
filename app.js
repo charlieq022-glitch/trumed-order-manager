@@ -71,21 +71,29 @@ const prodottiData = [
 let catalogData = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // Pulizia di vecchie cache locali residue
-    localStorage.removeItem('trumed_catalogo_cache');
+    try {
+        console.log("Avvio applicazione Trumed...");
+        
+        // Pulizia di vecchie cache locali residue
+        localStorage.removeItem('trumed_catalogo_cache');
 
-    const dataOggi = new Date().toISOString().split('T')[0];
-    const inputData = document.getElementById('ordineData');
-    if (inputData) inputData.value = dataOggi;
+        const dataOggi = new Date().toISOString().split('T')[0];
+        const inputData = document.getElementById('ordineData');
+        if (inputData) inputData.value = dataOggi;
 
-    // Caricamento in parallelo per massima velocita da server
-    await Promise.all([
-        caricaTargetDalBackend(),
-        caricaCatalogoDaFirestore()
-    ]);
+        // Caricamento in parallelo per massima velocita da server
+        await Promise.all([
+            caricaTargetDalBackend(),
+            caricaCatalogoDaFirestore()
+        ]);
 
-    caricaOrdiniSalvati();
-    setupStickyWidgetObserver();
+        caricaOrdiniSalvati();
+        setupStickyWidgetObserver();
+        
+    } catch (error) {
+        console.error("Errore critico durante l'avvio dell'app:", error);
+        alert("Errore di caricamento iniziale. Controlla la connessione.");
+    }
 });
 
 async function caricaTargetDalBackend() {
