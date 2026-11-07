@@ -17,16 +17,20 @@ export const db = getFirestore(app);
 
 const isLoginPage = window.location.pathname.includes('login.html');
 
-// Gestione dello stato dell'utente senza loop
-onAuthStateChanged(auth, (user) => {
+// Usiamo una promessa/controllo per assicurarci che Firebase abbia risposto prima di reindirizzare
+const checkAuth = new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        unsubscribe();
+        resolve(user);
+    });
+});
+
+checkAuth.then((user) => {
     if (!user && !isLoginPage) {
-        // Se non è loggato e siamo nella dashboard -> vai al login
+        // Solo se siamo certi che non c'è utente e siamo nella dashboard, vai al login
         window.location.href = "login.html";
-    } else if (user && isLoginPage) {
-        // Rimosso il reindirizzamento automatico da login.html a index.html 
-        // per evitare qualsiasi tipo di loop. Ci pensa login.js al click del bottone!
     } else if (user) {
-        // Aggiorna il messaggio di benvenuto nella dashboard
+        // Se l'utente è loggato, aggiorna il messaggio di benvenuto se presente
         const welcomeEl = document.getElementById('welcomeMessage');
         if (welcomeEl) {
             const email = user.email || "User";
