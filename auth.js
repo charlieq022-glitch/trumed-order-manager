@@ -15,15 +15,18 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Gestione stato utente e benvenuto
+const isLoginPage = window.location.pathname.includes('login.html');
+
+// Gestione dello stato dell'utente senza loop
 onAuthStateChanged(auth, (user) => {
-    const isLoginPage = window.location.pathname.includes('login.html');
-    
     if (!user && !isLoginPage) {
+        // Se non è loggato e siamo nella dashboard -> vai al login
         window.location.href = "login.html";
     } else if (user && isLoginPage) {
-        window.location.href = "index.html";
+        // Rimosso il reindirizzamento automatico da login.html a index.html 
+        // per evitare qualsiasi tipo di loop. Ci pensa login.js al click del bottone!
     } else if (user) {
+        // Aggiorna il messaggio di benvenuto nella dashboard
         const welcomeEl = document.getElementById('welcomeMessage');
         if (welcomeEl) {
             const email = user.email || "User";
