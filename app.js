@@ -7,7 +7,7 @@ import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc } from "htt
 
 let TARGET_ANNUALE = 1000000; 
 
-// Dati completi del catalogo (57 prodotti - colonna USA rimossa)
+// Dati di fallback del catalogo (57 prodotti)
 const prodottiData = [
   { id: "amlix-1", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX", descrizione: "5mg Amlodipine Besilate 5mg Tablet", pack: "100's", prezzo: 825.0, maxDeal: "-", arp: "825.00" },
   { id: "amlix-2", categoria: "CARDIOVASCULAR PRODUCTS", nome: "AMLIX", descrizione: "10mg Amlodipine Besilate 10mg Tablet", pack: "100's", prezzo: 1120.0, maxDeal: "-", arp: "1,120.00" },
@@ -71,17 +71,20 @@ const prodottiData = [
 let catalogData = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // Pulizia di vecchie cache locali residue
+    localStorage.removeItem('trumed_catalogo_cache');
+
     const dataOggi = new Date().toISOString().split('T')[0];
     const inputData = document.getElementById('ordineData');
     if (inputData) inputData.value = dataOggi;
 
-    // Esegue tutte le chiamate a Firebase in parallelo invece che una alla volta
+    // Caricamento in parallelo per massima velocita da server
     await Promise.all([
         caricaTargetDalBackend(),
-        caricaCatalogoDaFirestore(),
-        caricaOrdiniSalvati()
+        caricaCatalogoDaFirestore()
     ]);
-    
+
+    caricaOrdiniSalvati();
     setupStickyWidgetObserver();
 });
 
@@ -150,44 +153,43 @@ function popolaSelectCategorie() {
     });
 }
 
-// Sincronizzazione ad altissima velocità: legge il catalogo senza sovrascrivere 57 volte a ogni avvio
+// ==========================================
+// CARICAMENTO DIRETTO E STABILE DA FIRESTORE
+// ==========================================
 async function caricaCatalogoDaFirestore() {
-    const CACHE_KEY = 'trumed_catalogo_cache';
-    
-    // 1. VERIFICA E CARICAMENTO DA CACHE LOCALE (Istantaneo)
-    const datiInCache = localStorage.getItem(CACHE_KEY);
-    if (datiInCache) {
-        try {
-            const prodottiDaCache = JSON.parse(datiInCache);
-            // Funzione che popola la tua interfaccia/dropdown dei prodotti
-            popolaTabellaOSelettoreProdotti(prodottiDaCache); 
-        } catch (e) {
-            console.error("Errore nel parsing della cache:", e);
-        }
-    }
-
-    // 2. AGGIORNAMENTO SILENZIOSO DA FIRESTORE (In background)
     try {
-        const querySnapshot = await getDocs(collection(db, "prodotti")); // Adatta al nome della tua collection
-        const prodottiAggiornati = [];
-        querySnapshot.forEach((doc) => {
-            prodottiAggiornati.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Salva i dati freschi nel localStorage per i prossimi avvii
-        localStorage.setItem(CACHE_KEY, JSON.stringify(prodottiAggiornati));
-
-        // Se non c'era una cache precedente, aggiorna la vista adesso
-        if (!datiInCache) {
-            popolaTabellaOSelettoreProdotti(prodottiAggiornati);
+        console.log("Recupero catalogo live da Firestore...");
+        const querySnapshot = await getDocs(collection(db, "catalogo"));
+        
+        if (querySnapshot.empty) {
+            console.log("Database vuoto: popolamento iniziale...");
+            for (const item of prodottiData) {
+                await setDoc(doc(db, "catalogo", item.id), item);
+            }
+            catalogData = [...prodottiData];
+        } else {
+            const prodottiServer = [];
+            querySnapshot.forEach((docSnap) => {
+                prodottiServer.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            catalogData = prodottiServer;
         }
+
+        console.log(`Catalogo caricato dal cloud! Totale prodotti: ${catalogData.length}`);
+        renderizzaCatalogo();
+        popolaSelectCategorie();
+        ricalcolaTotale();
+
     } catch (error) {
-        console.error("Impossibile aggiornare il catalogo da Firestore:", error);
-        // Se la rete fallisce ma avevamo la cache, l'app continua a funzionare perfettamente!
+        console.error("Errore connessione Firestore, uso dati di emergenza:", error);
+        catalogData = [...prodottiData];
+        renderizzaCatalogo();
+        popolaSelectCategorie();
+        ricalcolaTotale();
     }
 }
 
-// Rendering Lazy Ultra-veloce
+// Rendering Lazy
 window.renderizzaCatalogo = function() {
     const container = document.getElementById('categorieContainer');
     if (!container) return;
@@ -474,7 +476,7 @@ window.chiudiModalNuovoProdotto = function() {
 
 window.salvaNuovoProdotto = async function() {
     const categoria = document.getElementById('nuovaCategoria').value;
-    const nome = document.getElementById('nuovoNome').value.trim(); // Brand Name
+    const nome = document.getElementById('nuovoNome').value.trim();
     const descrizione = document.getElementById('nuovaDescrizione') ? document.getElementById('nuovaDescrizione').value.trim() : nome;
     const pack = document.getElementById('nuovoPack').value.trim();
     const prezzo = parseFloat(document.getElementById('nuovoPrezzo').value);
@@ -506,7 +508,6 @@ window.salvaNuovoProdotto = async function() {
         popolaSelectCategorie();
         chiudiModalNuovoProdotto();
         
-        // Pulisci i campi della modale
         document.getElementById('nuovoNome').value = '';
         if (document.getElementById('nuovaDescrizione')) document.getElementById('nuovaDescrizione').value = '';
         document.getElementById('nuovoPrezzo').value = '';
