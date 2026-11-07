@@ -2,8 +2,9 @@
 // TRUMED ORDER MANAGEMENT - APP.JS
 // ==========================================
 
-import { db } from "./auth.js";
-import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth } from "./auth.js";
+import { collection, getDocs, addDoc, setDoc, doc, deleteDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let TARGET_ANNUALE = 1000000; 
 
@@ -83,8 +84,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await caricaTargetDalBackend();
     await caricaCatalogoDaFirestore();
-    caricaOrdiniSalvati();
     setupStickyWidgetObserver();
+
+    // Reazione sicura allo stato di autenticazione dell'utente
+    if (auth) {
+        onAuthStateChanged(auth, (user) => {
+            caricaOrdiniSalvati();
+        });
+    } else {
+        caricaOrdiniSalvati();
+    }
 });
 
 async function caricaTargetDalBackend() {
@@ -520,7 +529,10 @@ window.salvaOrdineCorrente = async function() {
 
     let totaleOrdine = prodottiSelezionati.reduce((acc, p) => acc + (p.quantita * p.prezzo), 0);
 
+    const currentUser = auth ? auth.currentUser : null;
     const ordineData = {
+        userId: currentUser ? currentUser.uid : "anonimo",
+        userEmail: currentUser ? currentUser.email : "N/A",
         cliente,
         note: document.getElementById('ordineNote').value,
         noteExtra: document.getElementById('ordineNoteExtra').value,
@@ -543,14 +555,23 @@ async function caricaOrdiniSalvati() {
     if (!listaContainer) return;
 
     try {
-        const querySnapshot = await getDocs(collection(db, "ordini"));
-        if (querySnapshot.empty) {
+        const currentUser = auth ? auth.currentUser : null;
+        let qSnapshot;
+
+        if (currentUser) {
+            const q = query(collection(db, "ordini"), where("userId", "==", currentUser.uid));
+            qSnapshot = await getDocs(q);
+        } else {
+            qSnapshot = await getDocs(collection(db, "ordini"));
+        }
+
+        if (qSnapshot.empty) {
             listaContainer.innerHTML = '<p class="text-slate-400 italic text-xs">No saved orders yet.</p>';
             return;
         }
 
         let html = '';
-        querySnapshot.forEach((docSnap) => {
+        qSnapshot.forEach((docSnap) => {
             const o = docSnap.data();
             html += `
                 <div onclick="caricaOrdineDalBackend('${docSnap.id}')" class="bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl p-2.5 flex justify-between items-center text-xs cursor-pointer transition-colors group">
