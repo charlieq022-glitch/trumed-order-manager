@@ -21,23 +21,30 @@ window.toggleAuthMode = function() {
         toggleText.textContent = "Hai già un account?";
         btnToggle.textContent = "Accedi";
     }
-}
+};
 
 document.getElementById("authForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
+    const submitBtn = document.getElementById("submitBtn");
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Caricamento...";
 
     try {
         if (isLoginMode) {
             await signInWithEmailAndPassword(auth, email, password);
-            window.location.href = "index.html"; // Reindirizza al gestionale dopo il login
+            // Reindirizzamento esplicito alla dashboard
+            window.location.assign("./index.html");
         } else {
             await createUserWithEmailAndPassword(auth, email, password);
             alert("Registrazione avvenuta con successo!");
-            window.location.href = "index.html";
+            window.location.assign("./index.html");
         }
     } catch (error) {
-        alert("Errore: " + error.message);
+        alert("Errore durante l'accesso: " + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = isLoginMode ? "Accedi" : "Registrati";
     }
 });
