@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -15,18 +15,15 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Controllo dello stato di accesso con reindirizzamento protetto
+// Gestione stato utente e benvenuto
 onAuthStateChanged(auth, (user) => {
     const isLoginPage = window.location.pathname.includes('login.html');
     
     if (!user && !isLoginPage) {
-        // Se non è loggato e non siamo già nella pagina di login, reindirizza
         window.location.href = "login.html";
     } else if (user && isLoginPage) {
-        // Se è già loggato e si trova nel login, rimandalo alla dashboard
         window.location.href = "index.html";
     } else if (user) {
-        // Aggiorna l'interfaccia con il nome dell'utente corrente
         const welcomeEl = document.getElementById('welcomeMessage');
         if (welcomeEl) {
             const email = user.email || "User";
@@ -35,7 +32,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Funzione di logout globale
 window.logout = function() {
     signOut(auth).then(() => {
         window.location.href = "login.html";
