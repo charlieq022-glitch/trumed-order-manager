@@ -15,27 +15,14 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-const isLoginPage = window.location.pathname.includes('login.html');
-
-// Usiamo una promessa/controllo per assicurarci che Firebase abbia risposto prima di reindirizzare
-const checkAuth = new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        unsubscribe();
-        resolve(user);
-    });
-});
-
-checkAuth.then((user) => {
-    if (!user && !isLoginPage) {
-        // Solo se siamo certi che non c'è utente e siamo nella dashboard, vai al login
-        window.location.href = "login.html";
-    } else if (user) {
-        // Se l'utente è loggato, aggiorna il messaggio di benvenuto se presente
-        const welcomeEl = document.getElementById('welcomeMessage');
-        if (welcomeEl) {
-            const email = user.email || "User";
-            welcomeEl.textContent = `Hello, ${email.split('@')[0]}`;
-        }
+// Stampiamo lo stato in console per capire cosa sta succedendo
+onAuthStateChanged(auth, (user) => {
+    console.log("Stato utente corrente:", user ? user.email : "Non loggato");
+    
+    const welcomeEl = document.getElementById('welcomeMessage');
+    if (welcomeEl && user) {
+        const email = user.email || "User";
+        welcomeEl.textContent = `Hello, ${email.split('@')[0]}`;
     }
 });
 
